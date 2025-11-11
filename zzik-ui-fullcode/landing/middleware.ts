@@ -14,14 +14,13 @@ const intlMiddleware = createMiddleware({
 });
 
 export default function middleware(request: NextRequest) {
-  // Apply i18n middleware first
-  const response = intlMiddleware(request);
-
-  // Add security headers to all responses
-  const headers = new Headers(response.headers);
+  const pathname = request.nextUrl.pathname;
   
-  // CORS headers for API routes
-  if (request.nextUrl.pathname.startsWith('/api')) {
+  // For API routes, skip i18n middleware and only apply security headers
+  if (pathname.startsWith('/api')) {
+    const headers = new Headers();
+    
+    // CORS configuration
     const origin = request.headers.get('origin') || '';
     const allowedOrigins = [
       'http://localhost:8081',  // Expo web
@@ -43,13 +42,26 @@ export default function middleware(request: NextRequest) {
       headers.set('Access-Control-Max-Age', '86400'); // 24 hours
     }
     
+    // Security headers for API routes
+    headers.set('X-Content-Type-Options', 'nosniff');
+    headers.set('X-Frame-Options', 'DENY');
+    headers.set('X-XSS-Protection', '1; mode=block');
+    headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    
     // Handle preflight requests
     if (request.method === 'OPTIONS') {
       return new NextResponse(null, { status: 200, headers });
     }
+    
+    // For API routes, pass through without i18n middleware
+    return NextResponse.next({ request: { headers } });
   }
   
-  // Security headers (applied to all routes)
+  // For non-API routes, apply i18n middleware
+  const response = intlMiddleware(request);
+  const headers = new Headers(response.headers);
+  
+  // Add additional security headers to all non-API routes
   headers.set('X-Content-Type-Options', 'nosniff');
   headers.set('X-Frame-Options', 'DENY');
   headers.set('X-XSS-Protection', '1; mode=block');
@@ -93,7 +105,7 @@ export const config = {
     // Enable redirects that add missing locales but exclude static files
     '/((?!_next|_vercel|.*\\..*).*)',
     
-    // Include API routes for CORS
+    // Include API routes for CORS and security headers
     '/api/:path*'
   ]
 };
