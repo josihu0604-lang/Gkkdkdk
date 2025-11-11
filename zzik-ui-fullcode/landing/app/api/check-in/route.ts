@@ -11,11 +11,7 @@ import {
   generateIdempotencyKey,
   GPSIntegrityData,
 } from '@/lib/gps-integrity';
-
-// Rate limiting configuration
-const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = 10; // 10 requests per minute
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+import { getClientId, applyRateLimit, RateLimitType } from '@/lib/rate-limiter';
 
 /**
  * POST /api/check-in - Submit check-in with GPS verification
@@ -30,53 +26,30 @@ const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
  *   motion?: { x: number, y: number, z: number }
  * }
  */
-/**
- * Rate limiting middleware
- */
-function checkRateLimit(clientId: string): { allowed: boolean; retryAfter?: number } {
-  const now = Date.now();
-  const clientData = rateLimitMap.get(clientId);
-
-  if (!clientData || now > clientData.resetAt) {
-    // Reset or initialize
-    rateLimitMap.set(clientId, {
-      count: 1,
-      resetAt: now + RATE_LIMIT_WINDOW_MS,
-    });
-    return { allowed: true };
-  }
-
-  if (clientData.count >= RATE_LIMIT_MAX_REQUESTS) {
-    const retryAfter = Math.ceil((clientData.resetAt - now) / 1000);
-    return { allowed: false, retryAfter };
-  }
-
-  clientData.count++;
-  return { allowed: true };
-}
 
 export async function POST(request: NextRequest) {
   const startTime = performance.now();
   
   try {
-    // Rate limiting
-    const clientId = request.headers.get('x-forwarded-for') || request.ip || 'anonymous';
-    const rateLimitResult = checkRateLimit(clientId);
+    // Advanced rate limiting with Token Bucket (strict mode for check-in)
+    const clientId = getClientId(request);
+    const rateLimitResult = applyRateLimit(clientId, RateLimitType.STRICT);
     
     if (!rateLimitResult.allowed) {
       return NextResponse.json(
         {
           error: 'Rate limit exceeded',
-          message: 'Too many requests. Please try again later.',
+          message: 'Too many check-in attempts. Please try again later.',
           retryAfter: rateLimitResult.retryAfter,
         },
         { 
           status: 429,
           headers: {
             'Retry-After': String(rateLimitResult.retryAfter),
-            'X-RateLimit-Limit': String(RATE_LIMIT_MAX_REQUESTS),
-            'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': String(Math.floor(Date.now() / 1000) + (rateLimitResult.retryAfter || 60)),
+            'X-RateLimit-Limit': '5',
+            'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+            'X-RateLimit-Reset': String(Math.floor(rateLimitResult.resetAt / 1000)),
+            'X-RateLimit-Type': 'token-bucket',
           },
         }
       );

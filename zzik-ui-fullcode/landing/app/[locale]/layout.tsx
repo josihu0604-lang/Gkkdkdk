@@ -1,6 +1,7 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
+import { PerformanceMonitor } from '../components/PerformanceMonitor';
 import "../../styles/globals.css";
 
 export function generateStaticParams() {
@@ -20,6 +21,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale}>
       <body>
+        <PerformanceMonitor />
         <NextIntlClientProvider messages={messages}>
           {children}
         </NextIntlClientProvider>
