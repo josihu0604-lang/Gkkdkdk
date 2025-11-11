@@ -1,8 +1,47 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback, memo } from "react";
 import { View, Text, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import MapView, { Marker, Circle, PROVIDER_DEFAULT } from "react-native-maps";
 import * as Location from "expo-location";
 import { getNearbyPlaces, Place } from "@/services/api";
+
+// Memoized PlaceMarker component for better performance
+const PlaceMarker = memo(({ place, getCategoryEmoji }: {
+  place: Place;
+  getCategoryEmoji: (category: string) => string;
+}) => {
+  const coordinate = useMemo(() => ({
+    latitude: place.location.latitude,
+    longitude: place.location.longitude,
+  }), [place.location.latitude, place.location.longitude]);
+
+  return (
+    <>
+      <Marker
+        coordinate={coordinate}
+        title={place.business_name}
+        description={`🎁 ${place.voucher_description}`}
+      >
+        <View style={styles.markerContainer}>
+          <View style={styles.marker}>
+            <Text style={styles.markerEmoji}>
+              {getCategoryEmoji(place.category)}
+            </Text>
+          </View>
+        </View>
+      </Marker>
+      {/* Geofence circle */}
+      <Circle
+        center={coordinate}
+        radius={place.geofence_radius}
+        fillColor="rgba(255, 107, 53, 0.05)"
+        strokeColor="rgba(255, 107, 53, 0.3)"
+        strokeWidth={1}
+      />
+    </>
+  );
+});
+
+PlaceMarker.displayName = 'PlaceMarker';
 
 export default function MapTab() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
@@ -41,7 +80,8 @@ export default function MapTab() {
     })();
   }, []);
 
-  const getCategoryEmoji = (category: string): string => {
+  // Memoized emoji mapping to avoid recreating on each render
+  const getCategoryEmoji = useCallback((category: string): string => {
     const emojiMap: { [key: string]: string } = {
       cafe: "☕",
       restaurant: "🍜",
@@ -54,7 +94,27 @@ export default function MapTab() {
       laundry: "🧺",
     };
     return emojiMap[category] || "📍";
-  };
+  }, []);
+
+  // Memoize initial map region to prevent recalculation
+  const initialRegion = useMemo(() => {
+    if (!location) return undefined;
+    return {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    };
+  }, [location]);
+
+  // Memoize user circle center
+  const userCircleCenter = useMemo(() => {
+    if (!location) return undefined;
+    return {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+    };
+  }, [location]);
 
   if (loading) {
     return (
@@ -78,57 +138,32 @@ export default function MapTab() {
       <MapView
         style={styles.map}
         provider={PROVIDER_DEFAULT}
-        initialRegion={{
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        }}
+        initialRegion={initialRegion}
         showsUserLocation
         showsMyLocationButton
+        loadingEnabled
+        loadingIndicatorColor="#FF6B35"
+        maxZoomLevel={18}
+        minZoomLevel={10}
       >
         {/* User's current location circle */}
-        <Circle
-          center={{
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          }}
-          radius={500}
-          fillColor="rgba(255, 107, 53, 0.1)"
-          strokeColor="rgba(255, 107, 53, 0.5)"
-          strokeWidth={2}
-        />
+        {userCircleCenter && (
+          <Circle
+            center={userCircleCenter}
+            radius={500}
+            fillColor="rgba(255, 107, 53, 0.1)"
+            strokeColor="rgba(255, 107, 53, 0.5)"
+            strokeWidth={2}
+          />
+        )}
 
-        {/* Place markers */}
+        {/* Place markers - memoized to prevent re-renders */}
         {places.map((place) => (
-          <Marker
+          <PlaceMarker
             key={place.id}
-            coordinate={{
-              latitude: place.location.latitude,
-              longitude: place.location.longitude,
-            }}
-            title={place.business_name}
-            description={`🎁 ${place.voucher_description}`}
-          >
-            <View style={styles.markerContainer}>
-              <View style={styles.marker}>
-                <Text style={styles.markerEmoji}>
-                  {getCategoryEmoji(place.category)}
-                </Text>
-              </View>
-              {/* Geofence circle */}
-              <Circle
-                center={{
-                  latitude: place.location.latitude,
-                  longitude: place.location.longitude,
-                }}
-                radius={place.geofence_radius}
-                fillColor="rgba(255, 107, 53, 0.05)"
-                strokeColor="rgba(255, 107, 53, 0.3)"
-                strokeWidth={1}
-              />
-            </View>
-          </Marker>
+            place={place}
+            getCategoryEmoji={getCategoryEmoji}
+          />
         ))}
       </MapView>
 

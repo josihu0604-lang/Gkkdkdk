@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getNearbyPlaces } from '@/lib/db-mock';
 
+// Simple in-memory cache for nearby places
+interface CacheEntry {
+  data: any;
+  expiresAt: number;
+}
+
+const placeCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 60000; // 1 minute cache
+
 /**
  * GET /api/places - Get nearby places
  * 
@@ -10,7 +19,31 @@ import { getNearbyPlaces } from '@/lib/db-mock';
  * - radius: number (optional, default: 500 meters)
  * - limit: number (optional, default: 20)
  */
+/**
+ * Generate cache key from query parameters
+ */
+function getCacheKey(lat: number, lng: number, radius: number, limit: number): string {
+  // Round to 4 decimal places (~11m precision) for better cache hit rate
+  const roundedLat = Math.round(lat * 10000) / 10000;
+  const roundedLng = Math.round(lng * 10000) / 10000;
+  return `${roundedLat},${roundedLng},${radius},${limit}`;
+}
+
+/**
+ * Clean expired cache entries
+ */
+function cleanExpiredCache() {
+  const now = Date.now();
+  for (const [key, entry] of placeCache.entries()) {
+    if (now > entry.expiresAt) {
+      placeCache.delete(key);
+    }
+  }
+}
+
 export async function GET(request: NextRequest) {
+  const startTime = performance.now();
+  
   try {
     const searchParams = request.nextUrl.searchParams;
     
@@ -51,28 +84,72 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get nearby places
-    const places = getNearbyPlaces(lat, lng, radius, limit);
+    // Check cache first
+    const cacheKey = getCacheKey(lat, lng, radius, limit);
+    const now = Date.now();
+    const cachedEntry = placeCache.get(cacheKey);
+    
+    let places;
+    let cacheHit = false;
+    
+    if (cachedEntry && now < cachedEntry.expiresAt) {
+      // Cache hit
+      places = cachedEntry.data;
+      cacheHit = true;
+    } else {
+      // Cache miss - fetch from database
+      places = getNearbyPlaces(lat, lng, radius, limit);
+      
+      // Store in cache
+      placeCache.set(cacheKey, {
+        data: places,
+        expiresAt: now + CACHE_TTL_MS,
+      });
+      
+      // Clean expired entries periodically (1% chance)
+      if (Math.random() < 0.01) {
+        cleanExpiredCache();
+      }
+    }
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        places,
-        count: places.length,
-        query: {
-          lat,
-          lng,
-          radius,
-          limit,
+    const endTime = performance.now();
+    const processingTime = Math.round(endTime - startTime);
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          places,
+          count: places.length,
+          query: {
+            lat,
+            lng,
+            radius,
+            limit,
+          },
         },
       },
-    });
+      {
+        headers: {
+          'X-Cache': cacheHit ? 'HIT' : 'MISS',
+          'X-Processing-Time': `${processingTime}ms`,
+          'Cache-Control': 'public, max-age=60, stale-while-revalidate=30',
+        },
+      }
+    );
   } catch (error) {
-    console.error('Error fetching places:', error);
+    // Enhanced error logging
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error fetching places:', {
+      message: errorMessage,
+      timestamp: new Date().toISOString(),
+    });
+    
     return NextResponse.json(
       {
         error: 'Internal server error',
-        message: 'Failed to fetch nearby places',
+        message: 'Failed to fetch nearby places. Please try again.',
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );

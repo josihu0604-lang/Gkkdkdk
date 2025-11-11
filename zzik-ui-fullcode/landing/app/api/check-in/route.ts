@@ -12,6 +12,11 @@ import {
   GPSIntegrityData,
 } from '@/lib/gps-integrity';
 
+// Rate limiting configuration
+const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 10; // 10 requests per minute
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
 /**
  * POST /api/check-in - Submit check-in with GPS verification
  * 
@@ -25,9 +30,71 @@ import {
  *   motion?: { x: number, y: number, z: number }
  * }
  */
+/**
+ * Rate limiting middleware
+ */
+function checkRateLimit(clientId: string): { allowed: boolean; retryAfter?: number } {
+  const now = Date.now();
+  const clientData = rateLimitMap.get(clientId);
+
+  if (!clientData || now > clientData.resetAt) {
+    // Reset or initialize
+    rateLimitMap.set(clientId, {
+      count: 1,
+      resetAt: now + RATE_LIMIT_WINDOW_MS,
+    });
+    return { allowed: true };
+  }
+
+  if (clientData.count >= RATE_LIMIT_MAX_REQUESTS) {
+    const retryAfter = Math.ceil((clientData.resetAt - now) / 1000);
+    return { allowed: false, retryAfter };
+  }
+
+  clientData.count++;
+  return { allowed: true };
+}
+
 export async function POST(request: NextRequest) {
+  const startTime = performance.now();
+  
   try {
-    const body = await request.json();
+    // Rate limiting
+    const clientId = request.headers.get('x-forwarded-for') || request.ip || 'anonymous';
+    const rateLimitResult = checkRateLimit(clientId);
+    
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded',
+          message: 'Too many requests. Please try again later.',
+          retryAfter: rateLimitResult.retryAfter,
+        },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimitResult.retryAfter),
+            'X-RateLimit-Limit': String(RATE_LIMIT_MAX_REQUESTS),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': String(Math.floor(Date.now() / 1000) + (rateLimitResult.retryAfter || 60)),
+          },
+        }
+      );
+    }
+
+    // Parse and validate request body
+    let body: any;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      return NextResponse.json(
+        {
+          error: 'Invalid JSON',
+          message: 'Request body must be valid JSON',
+        },
+        { status: 400 }
+      );
+    }
 
     // Validate request schema
     const validation = validateCheckInRequest(body);
@@ -75,8 +142,8 @@ export async function POST(request: NextRequest) {
     const serverTime = new Date();
     const integrityResult = verifyGPSIntegrity(gpsData, place, serverTime);
 
-    // Generate idempotency key
-    const idempotencyKey = generateIdempotencyKey(user_id, place_id, timestamp);
+    // Generate idempotency key (now async)
+    const idempotencyKey = await generateIdempotencyKey(user_id, place_id, timestamp);
 
     // Create check-in record
     const checkIn: CheckIn = {
@@ -109,37 +176,61 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Return result
-    return NextResponse.json({
-      success: integrityResult.valid,
-      data: {
-        check_in: checkIn,
-        integrity: {
-          score: integrityResult.score,
-          breakdown: integrityResult.breakdown,
-          details: integrityResult.details,
-          threshold: 60,
+    // Calculate performance metrics
+    const endTime = performance.now();
+    const processingTime = Math.round(endTime - startTime);
+
+    // Return result with performance headers
+    return NextResponse.json(
+      {
+        success: integrityResult.valid,
+        data: {
+          check_in: checkIn,
+          integrity: {
+            score: integrityResult.score,
+            breakdown: integrityResult.breakdown,
+            details: integrityResult.details,
+            threshold: 60,
+          },
+          place: {
+            id: place.id,
+            name: place.business_name,
+            category: place.category,
+          },
+          voucher: integrityResult.valid
+            ? {
+                type: place.voucher_type,
+                value: place.voucher_value,
+                description: place.voucher_description,
+              }
+            : null,
         },
-        place: {
-          id: place.id,
-          name: place.business_name,
-          category: place.category,
-        },
-        voucher: integrityResult.valid
-          ? {
-              type: place.voucher_type,
-              value: place.voucher_value,
-              description: place.voucher_description,
-            }
-          : null,
       },
-    });
+      {
+        headers: {
+          'X-Processing-Time': `${processingTime}ms`,
+          'X-Request-ID': checkIn.id,
+          'Cache-Control': 'no-store, must-revalidate',
+        },
+      }
+    );
   } catch (error) {
-    console.error('Error processing check-in:', error);
+    // Enhanced error logging with context
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    console.error('Error processing check-in:', {
+      message: errorMessage,
+      stack: errorStack,
+      timestamp: new Date().toISOString(),
+    });
+    
+    // Don't expose internal error details to client
     return NextResponse.json(
       {
         error: 'Internal server error',
-        message: 'Failed to process check-in',
+        message: 'Failed to process check-in. Please try again.',
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );

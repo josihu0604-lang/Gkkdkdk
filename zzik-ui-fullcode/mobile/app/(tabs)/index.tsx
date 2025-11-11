@@ -1,7 +1,35 @@
-import { useEffect, useState } from "react";
-import { View, Text, Button, Alert, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
+import { useEffect, useState, useCallback, useMemo, memo } from "react";
+import { View, Text, Button, Alert, StyleSheet, ActivityIndicator, ScrollView, TouchableOpacity } from "react-native";
 import * as Location from "expo-location";
 import { getNearbyPlaces, checkIn, Place } from "@/services/api";
+
+// Memoized PlaceItem component to prevent unnecessary re-renders
+const PlaceItem = memo(({ place, isSelected, onSelect }: {
+  place: Place;
+  isSelected: boolean;
+  onSelect: () => void;
+}) => {
+  return (
+    <TouchableOpacity
+      onPress={onSelect}
+      style={[
+        styles.placeItem,
+        isSelected && styles.placeItemSelected,
+      ]}
+      activeOpacity={0.7}
+    >
+      <Text style={styles.placeName}>
+        {place.business_name}
+      </Text>
+      <Text style={styles.placeCategory}>{place.category}</Text>
+      <Text style={styles.placeVoucher}>
+        🎁 {place.voucher_description}
+      </Text>
+    </TouchableOpacity>
+  );
+});
+
+PlaceItem.displayName = 'PlaceItem';
 
 export default function Index() {
   const [coords, setCoords] = useState<{ latitude: number; longitude: number; accuracy: number } | null>(null);
@@ -51,7 +79,8 @@ export default function Index() {
     })();
   }, []);
 
-  async function handleCheckin() {
+  // Memoized check-in handler to prevent re-creation
+  const handleCheckin = useCallback(async () => {
     if (!coords || !selectedPlace) return;
 
     setChecking(true);
@@ -82,7 +111,7 @@ export default function Index() {
     } finally {
       setChecking(false);
     }
-  }
+  }, [coords, selectedPlace]);
 
   return (
     <ScrollView style={styles.scrollView}>
@@ -112,21 +141,12 @@ export default function Index() {
               </Text>
               {places.length > 0 ? (
                 places.map((place) => (
-                  <View
+                  <PlaceItem
                     key={place.id}
-                    style={[
-                      styles.placeItem,
-                      selectedPlace?.id === place.id && styles.placeItemSelected,
-                    ]}
-                  >
-                    <Text style={styles.placeName} onPress={() => setSelectedPlace(place)}>
-                      {place.business_name}
-                    </Text>
-                    <Text style={styles.placeCategory}>{place.category}</Text>
-                    <Text style={styles.placeVoucher}>
-                      🎁 {place.voucher_description}
-                    </Text>
-                  </View>
+                    place={place}
+                    isSelected={selectedPlace?.id === place.id}
+                    onSelect={() => setSelectedPlace(place)}
+                  />
                 ))
               ) : (
                 <Text style={styles.noPlaces}>주변에 장소가 없습니다</Text>

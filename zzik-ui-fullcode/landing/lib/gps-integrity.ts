@@ -187,26 +187,41 @@ export function verifyGPSIntegrity(
 }
 
 /**
- * Generate idempotency key for check-in
+ * Generate idempotency key for check-in (optimized with crypto)
  */
-export function generateIdempotencyKey(
+export async function generateIdempotencyKey(
   userId: string,
   placeId: string,
   timestamp: string
-): string {
+): Promise<string> {
   const data = `${userId}-${placeId}-${timestamp}`;
-  // Simple hash (in production, use crypto.createHash)
-  let hash = 0;
-  for (let i = 0; i < data.length; i++) {
-    const char = data.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32bit integer
+  
+  // Use Web Crypto API for better hashing (Edge Runtime compatible)
+  if (typeof crypto !== 'undefined' && crypto.subtle) {
+    try {
+      const encoder = new TextEncoder();
+      const dataBuffer = encoder.encode(data);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return `idem-${hashHex.slice(0, 16)}`; // Use first 16 chars (64 bits)
+    } catch (error) {
+      // Fallback to simple hash if crypto fails
+      console.warn('Crypto API failed, using fallback hash:', error);
+    }
   }
-  return `idem-${Math.abs(hash).toString(36)}`;
+  
+  // Fallback: FNV-1a hash (better distribution than simple hash)
+  let hash = 2166136261;
+  for (let i = 0; i < data.length; i++) {
+    hash ^= data.charCodeAt(i);
+    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+  }
+  return `idem-${(hash >>> 0).toString(36)}`;
 }
 
 /**
- * Validate check-in request schema
+ * Validate check-in request schema (enhanced with detailed validation)
  */
 export function validateCheckInRequest(data: any): {
   valid: boolean;
@@ -214,31 +229,98 @@ export function validateCheckInRequest(data: any): {
 } {
   const errors: string[] = [];
 
-  if (!data.location) {
-    errors.push('Missing location data');
+  // Validate location object
+  if (!data.location || typeof data.location !== 'object') {
+    errors.push('Missing or invalid location data');
   } else {
+    // Validate latitude
     if (typeof data.location.latitude !== 'number') {
-      errors.push('Invalid latitude');
+      errors.push('Invalid latitude: must be a number');
+    } else if (data.location.latitude < -90 || data.location.latitude > 90) {
+      errors.push('Invalid latitude: must be between -90 and 90');
+    } else if (!isFinite(data.location.latitude)) {
+      errors.push('Invalid latitude: must be a finite number');
     }
+    
+    // Validate longitude
     if (typeof data.location.longitude !== 'number') {
-      errors.push('Invalid longitude');
+      errors.push('Invalid longitude: must be a number');
+    } else if (data.location.longitude < -180 || data.location.longitude > 180) {
+      errors.push('Invalid longitude: must be between -180 and 180');
+    } else if (!isFinite(data.location.longitude)) {
+      errors.push('Invalid longitude: must be a finite number');
     }
+    
+    // Validate accuracy
     if (typeof data.location.accuracy !== 'number') {
-      errors.push('Invalid accuracy');
+      errors.push('Invalid accuracy: must be a number');
+    } else if (data.location.accuracy < 0 || data.location.accuracy > 1000) {
+      errors.push('Invalid accuracy: must be between 0 and 1000 meters');
+    } else if (!isFinite(data.location.accuracy)) {
+      errors.push('Invalid accuracy: must be a finite number');
     }
   }
 
+  // Validate timestamp
   if (!data.timestamp) {
     errors.push('Missing timestamp');
+  } else if (typeof data.timestamp !== 'string') {
+    errors.push('Invalid timestamp: must be a string');
   } else {
     const timestamp = new Date(data.timestamp);
     if (isNaN(timestamp.getTime())) {
-      errors.push('Invalid timestamp format');
+      errors.push('Invalid timestamp format: must be ISO 8601');
+    } else {
+      // Check if timestamp is not too far in past or future
+      const now = Date.now();
+      const timeDiff = Math.abs(timestamp.getTime() - now);
+      const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+      
+      if (timeDiff > ONE_DAY_MS) {
+        errors.push('Invalid timestamp: must be within 24 hours of current time');
+      }
     }
   }
 
+  // Validate place_id
   if (!data.place_id) {
     errors.push('Missing place_id');
+  } else if (typeof data.place_id !== 'string') {
+    errors.push('Invalid place_id: must be a string');
+  } else if (data.place_id.length === 0 || data.place_id.length > 100) {
+    errors.push('Invalid place_id: must be between 1 and 100 characters');
+  }
+
+  // Validate optional Wi-Fi data
+  if (data.wifi !== undefined) {
+    if (typeof data.wifi !== 'object' || data.wifi === null) {
+      errors.push('Invalid wifi: must be an object');
+    } else if (data.wifi.ssids !== undefined) {
+      if (!Array.isArray(data.wifi.ssids)) {
+        errors.push('Invalid wifi.ssids: must be an array');
+      } else if (data.wifi.ssids.length > 50) {
+        errors.push('Invalid wifi.ssids: maximum 50 SSIDs allowed');
+      } else if (!data.wifi.ssids.every((s: any) => typeof s === 'string')) {
+        errors.push('Invalid wifi.ssids: all SSIDs must be strings');
+      }
+    }
+  }
+
+  // Validate optional motion data
+  if (data.motion !== undefined) {
+    if (typeof data.motion !== 'object' || data.motion === null) {
+      errors.push('Invalid motion: must be an object');
+    } else {
+      if (typeof data.motion.x !== 'number' || !isFinite(data.motion.x)) {
+        errors.push('Invalid motion.x: must be a finite number');
+      }
+      if (typeof data.motion.y !== 'number' || !isFinite(data.motion.y)) {
+        errors.push('Invalid motion.y: must be a finite number');
+      }
+      if (typeof data.motion.z !== 'number' || !isFinite(data.motion.z)) {
+        errors.push('Invalid motion.z: must be a finite number');
+      }
+    }
   }
 
   return {
