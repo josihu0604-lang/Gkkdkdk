@@ -1,0 +1,35 @@
+{
+  "hero": {
+    "title": "探索社区，赢取奖励",
+    "subtitle": "使用ZZIK发现隐藏的美食和景点，赚取USDC奖励",
+    "cta": "免费开始",
+    "watchDemo": "观看演示"
+  },
+  "features": {
+    "title": "核心功能",
+    "explore": {
+      "title": "🗺️ 探索",
+      "description": "在地图上发现附近的地点，访问后获得奖励"
+    },
+    "content": {
+      "title": "📱 内容",
+      "description": "通过短视频分享和观看真实的地点评价"
+    },
+    "rewards": {
+      "title": "💰 奖励",
+      "description": "完成任务，立即获得USDC稳定币奖励"
+    },
+    "gamification": {
+      "title": "🎮 游戏化",
+      "description": "升级、获得徽章，完成挑战任务"
+    }
+  },
+  "cta": {
+    "title": "立即开始",
+    "subtitle": "商家可使用ZZIK B2B平台吸引顾客",
+    "button": "开始免费试用"
+  },
+  "footer": {
+    "copyright": "© 2025 ZZIK. 版权所有。"
+  }
+}

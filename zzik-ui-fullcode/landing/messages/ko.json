@@ -1,0 +1,35 @@
+{
+  "hero": {
+    "title": "동네 탐험하고 리워드 받기",
+    "subtitle": "ZZIK으로 숨겨진 맛집과 명소를 발견하고 USDC 리워드를 획득하세요",
+    "cta": "무료로 시작하기",
+    "watchDemo": "데모 보기"
+  },
+  "features": {
+    "title": "핵심 기능",
+    "explore": {
+      "title": "🗺️ 탐험",
+      "description": "지도에서 주변 장소를 발견하고 방문하여 리워드를 획득하세요"
+    },
+    "content": {
+      "title": "📱 콘텐츠",
+      "description": "짧은 세로 영상으로 생생한 장소 후기를 공유하고 시청하세요"
+    },
+    "rewards": {
+      "title": "💰 리워드",
+      "description": "미션 완료하고 USDC 스테이블코인으로 즉시 보상받으세요"
+    },
+    "gamification": {
+      "title": "🎮 게임화",
+      "description": "레벨업하고 배지를 획득하며 도전 과제를 완수하세요"
+    }
+  },
+  "cta": {
+    "title": "지금 시작하세요",
+    "subtitle": "사업자라면 ZZIK B2B 플랫폼으로 고객을 유치하세요",
+    "button": "무료 체험 시작"
+  },
+  "footer": {
+    "copyright": "© 2025 ZZIK. All rights reserved."
+  }
+}

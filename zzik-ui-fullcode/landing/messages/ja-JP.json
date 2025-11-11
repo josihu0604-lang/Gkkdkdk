@@ -1,0 +1,35 @@
+{
+  "hero": {
+    "title": "街を探索して報酬を獲得",
+    "subtitle": "ZZIKで隠れた名店と観光スポットを発見し、USDC報酬を獲得しましょう",
+    "cta": "無料で始める",
+    "watchDemo": "デモを見る"
+  },
+  "features": {
+    "title": "主な機能",
+    "explore": {
+      "title": "🗺️ 探索",
+      "description": "地図で周辺のスポットを発見し、訪問して報酬を獲得"
+    },
+    "content": {
+      "title": "📱 コンテンツ",
+      "description": "ショート動画で生々しい場所のレビューを共有・視聴"
+    },
+    "rewards": {
+      "title": "💰 報酬",
+      "description": "ミッション完了でUSDCステーブルコインを即座に獲得"
+    },
+    "gamification": {
+      "title": "🎮 ゲーム化",
+      "description": "レベルアップしてバッジを獲得、チャレンジを達成"
+    }
+  },
+  "cta": {
+    "title": "今すぐ始める",
+    "subtitle": "事業者はZZIK B2Bプラットフォームで顧客を獲得",
+    "button": "無料トライアル開始"
+  },
+  "footer": {
+    "copyright": "© 2025 ZZIK. All rights reserved."
+  }
+}
