@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZZIK Design System - Demo (다크 테마)</title>
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* 데모용 추가 스타일 */
+    .demo-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--spacing-8);
+    }
+
+    .demo-section {
+      margin-bottom: var(--spacing-16);
+    }
+
+    .demo-section h2 {
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-bold);
+      line-height: var(--line-height-tight);
+      margin-bottom: var(--spacing-6);
+      color: var(--text-primary);
+    }
+
+    .demo-section h3 {
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-semibold);
+      margin-bottom: var(--spacing-4);
+      color: var(--text-secondary);
+    }
+
+    .demo-grid {
+      display: grid;
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-8);
+    }
+
+    .demo-grid-2 {
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+
+    .demo-grid-3 {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    /* 버튼 스타일 */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-3) var(--spacing-6);
+      font-family: var(--font-sans);
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-medium);
+      border: none;
+      border-radius: var(--radius-base);
+      cursor: pointer;
+      transition: 
+        background var(--duration-fast) var(--easing-out),
+        transform var(--duration-fast) var(--easing-spring),
+        box-shadow var(--duration-fast) var(--easing-out);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      background: var(--brand-primary);
+      color: var(--color-gray-0);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-primary:hover {
+      background: var(--brand-hover);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-primary:active {
+      background: var(--brand-active);
+      box-shadow: var(--shadow-xs);
+    }
+
+    .btn-secondary {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border-primary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-hover);
+    }
+
+    .btn-accent {
+      background: var(--accent-primary);
+      color: var(--color-gray-0);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-accent:hover {
+      background: var(--accent-hover);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* 카드 스타일 */
+    .card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-6);
+      box-shadow: var(--shadow-md);
+      transition: 
+        box-shadow var(--duration-base) var(--easing-spring),
+        transform var(--duration-base) var(--easing-spring);
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+    }
+
+    .card-title {
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-semibold);
+      line-height: var(--line-height-tight);
+      margin-bottom: var(--spacing-3);
+      color: var(--text-primary);
+    }
+
+    .card-content {
+      font-size: var(--font-size-base);
+      line-height: var(--line-height-normal);
+      color: var(--text-secondary);
+    }
+
+    /* 인풋 스타일 */
+    .input {
+      width: 100%;
+      padding: var(--spacing-3) var(--spacing-4);
+      font-family: var(--font-sans);
+      font-size: var(--font-size-base);
+      color: var(--text-primary);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-md);
+      transition: 
+        border-color var(--duration-fast) var(--easing-out),
+        box-shadow var(--duration-fast) var(--easing-out);
+    }
+
+    .input:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 
+        0 0 0 3px rgba(55, 120, 220, 0.1),
+        var(--shadow-sm);
+    }
+
+    .input::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    /* 컬러 스와치 */
+    .color-swatch {
+      display: flex;
+      gap: var(--spacing-2);
+      flex-wrap: wrap;
+    }
+
+    .color-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+
+    .color-box {
+      width: 80px;
+      height: 80px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .color-label {
+      font-size: var(--font-size-xs);
+      color: var(--text-tertiary);
+      font-family: var(--font-mono);
+    }
+
+    /* 타이포그래피 샘플 */
+    .type-sample {
+      margin-bottom: var(--spacing-4);
+      padding-bottom: var(--spacing-4);
+      border-bottom: 1px solid var(--border-primary);
+    }
+
+    .type-sample:last-child {
+      border-bottom: none;
+    }
+
+    /* 그림자 샘플 */
+    .shadow-sample {
+      width: 100%;
+      height: 120px;
+      background: var(--bg-elevated);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--text-secondary);
+    }
+
+    /* 헤더 */
+    .demo-header {
+      text-align: center;
+      padding: var(--spacing-12) 0;
+      border-bottom: 1px solid var(--border-primary);
+      margin-bottom: var(--spacing-12);
+    }
+
+    .demo-header h1 {
+      font-size: var(--font-size-5xl);
+      font-weight: var(--font-weight-bold);
+      line-height: var(--line-height-tight);
+      letter-spacing: var(--letter-spacing-tighter);
+      margin-bottom: var(--spacing-4);
+      background: linear-gradient(135deg, var(--color-primary-400), var(--color-accent-400));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .demo-header p {
+      font-size: var(--font-size-lg);
+      color: var(--text-secondary);
+    }
+
+    /* 테마 토글 버튼 */
+    .theme-toggle {
+      position: fixed;
+      top: var(--spacing-6);
+      right: var(--spacing-6);
+      padding: var(--spacing-3);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      box-shadow: var(--shadow-lg);
+      font-size: var(--font-size-xl);
+      transition: all var(--duration-base) var(--easing-spring);
+      z-index: var(--z-fixed);
+    }
+
+    .theme-toggle:hover {
+      transform: rotate(20deg) scale(1.1);
+    }
+
+    /* 알림 배지 */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: var(--spacing-1) var(--spacing-3);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-medium);
+      border-radius: var(--radius-full);
+      background: var(--bg-hover);
+      color: var(--text-secondary);
+    }
+
+    .badge-primary {
+      background: var(--brand-primary);
+      color: var(--color-gray-0);
+    }
+
+    .badge-success {
+      background: var(--color-success);
+      color: var(--color-gray-0);
+    }
+
+    .badge-warning {
+      background: var(--color-warning);
+      color: var(--color-gray-1000);
+    }
+
+    .badge-error {
+      background: var(--color-error);
+      color: var(--color-gray-0);
+    }
+  </style>
+</head>
+<body>
+  <!-- 테마 토글 버튼 -->
+  <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+
+  <div class="demo-container">
+    <!-- 헤더 -->
+    <header class="demo-header">
+      <h1>ZZIK Design System</h1>
+      <p>Linear App 2025 완전 벤치마킹 - 다크 테마 기본</p>
+    </header>
+
+    <!-- 색상 -->
+    <section class="demo-section">
+      <h2>🎨 색상 (Colors)</h2>
+      
+      <h3>Primary (Brand Purple)</h3>
+      <div class="color-swatch">
+        <div class="color-item">
+          <div class="color-box" style="background: var(--color-primary-400)"></div>
+          <span class="color-label">400</span>
+        </div>
+        <div class="color-item">
+          <div class="color-box" style="background: var(--color-primary-500)"></div>
+          <span class="color-label">500</span>
+        </div>
+        <div class="color-item">
+          <div class="color-box" style="background: var(--color-primary-600)"></div>
+          <span class="color-label">600</span>
+        </div>
+      </div>
+
+      <h3>Accent (Blue)</h3>
+      <div class="color-swatch">
+        <div class="color-item">
+          <div class="color-box" style="background: var(--color-accent-400)"></div>
+          <span class="color-label">400</span>
+        </div>
+        <div class="color-item">
+          <div class="color-box" style="background: var(--color-accent-500)"></div>
+          <span class="color-label">500</span>
+        </div>
+        <div class="color-item">
+          <div class="color-box" style="background: var(--color-accent-600)"></div>
+          <span class="color-label">600</span>
+        </div>
+      </div>
+
+      <h3>Semantic Colors</h3>
+      <div class="color-swatch">
+        <div class="color-item">
+          <div class="color-box" style="background: var(--color-success)"></div>
+          <span class="color-label">Success</span>
+        </div>
+        <div class="color-item">
+          <div class="color-box" style="background: var(--color-warning)"></div>
+          <span class="color-label">Warning</span>
+        </div>
+        <div class="color-item">
+          <div class="color-box" style="background: var(--color-error)"></div>
+          <span class="color-label">Error</span>
+        </div>
+        <div class="color-item">
+          <div class="color-box" style="background: var(--color-info)"></div>
+          <span class="color-label">Info</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 버튼 -->
+    <section class="demo-section">
+      <h2>🔘 버튼 (Buttons)</h2>
+      <div style="display: flex; gap: var(--spacing-4); flex-wrap: wrap;">
+        <button class="btn btn-primary">Primary Button</button>
+        <button class="btn btn-secondary">Secondary Button</button>
+        <button class="btn btn-accent">Accent Button</button>
+      </div>
+    </section>
+
+    <!-- 카드 -->
+    <section class="demo-section">
+      <h2>📦 카드 (Cards)</h2>
+      <div class="demo-grid demo-grid-3">
+        <div class="card">
+          <div class="card-title">프로젝트 관리</div>
+          <div class="card-content">
+            Linear처럼 빠르고 직관적인 프로젝트 관리 도구입니다.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">이슈 트래킹</div>
+          <div class="card-content">
+            효율적인 이슈 추적과 관리 시스템을 제공합니다.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">팀 협업</div>
+          <div class="card-content">
+            실시간 협업과 커뮤니케이션을 지원합니다.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 인풋 -->
+    <section class="demo-section">
+      <h2>📝 입력 필드 (Input Fields)</h2>
+      <div class="demo-grid demo-grid-2">
+        <div>
+          <input type="text" class="input" placeholder="이름을 입력하세요">
+        </div>
+        <div>
+          <input type="email" class="input" placeholder="이메일을 입력하세요">
+        </div>
+      </div>
+    </section>
+
+    <!-- 타이포그래피 -->
+    <section class="demo-section">
+      <h2>📝 타이포그래피 (Typography)</h2>
+      
+      <div class="type-sample">
+        <h1 style="font-size: var(--font-size-4xl); font-weight: var(--font-weight-bold); line-height: var(--line-height-tight);">
+          Heading 1 - 36px Bold
+        </h1>
+      </div>
+      
+      <div class="type-sample">
+        <h2 style="font-size: var(--font-size-2xl); font-weight: var(--font-weight-semibold);">
+          Heading 2 - 24px Semibold
+        </h2>
+      </div>
+      
+      <div class="type-sample">
+        <p style="font-size: var(--font-size-base); line-height: var(--line-height-normal); color: var(--text-secondary);">
+          본문 텍스트 - 16px Regular, Line Height 1.5. 
+          Linear의 타이포그래피 시스템을 따릅니다.
+          깔끔하고 읽기 편한 텍스트 스타일입니다.
+        </p>
+      </div>
+      
+      <div class="type-sample">
+        <p style="font-size: var(--font-size-sm); color: var(--text-tertiary);">
+          작은 텍스트 - 14px, 보조 정보나 캡션에 사용합니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- 그림자 -->
+    <section class="demo-section">
+      <h2>🌑 그림자 (Shadows)</h2>
+      <div class="demo-grid demo-grid-3">
+        <div class="shadow-sample shadow-sm">shadow-sm</div>
+        <div class="shadow-sample shadow-md">shadow-md</div>
+        <div class="shadow-sample shadow-lg">shadow-lg</div>
+      </div>
+    </section>
+
+    <!-- 배지 -->
+    <section class="demo-section">
+      <h2>🏷️ 배지 (Badges)</h2>
+      <div style="display: flex; gap: var(--spacing-3); flex-wrap: wrap;">
+        <span class="badge">Default</span>
+        <span class="badge badge-primary">Primary</span>
+        <span class="badge badge-success">Success</span>
+        <span class="badge badge-warning">Warning</span>
+        <span class="badge badge-error">Error</span>
+      </div>
+    </section>
+
+    <!-- 간격 -->
+    <section class="demo-section">
+      <h2>📏 간격 (Spacing)</h2>
+      <div style="display: flex; flex-direction: column; gap: var(--spacing-2);">
+        <div style="height: var(--spacing-4); background: var(--color-primary-500); border-radius: var(--radius-sm);"></div>
+        <div style="height: var(--spacing-6); background: var(--color-accent-500); border-radius: var(--radius-sm);"></div>
+        <div style="height: var(--spacing-8); background: var(--color-primary-500); border-radius: var(--radius-sm);"></div>
+        <div style="height: var(--spacing-12); background: var(--color-accent-500); border-radius: var(--radius-sm);"></div>
+      </div>
+      <p style="margin-top: var(--spacing-4); font-size: var(--font-size-sm); color: var(--text-tertiary);">
+        4px 기본 단위 (spacing-4, 6, 8, 12)
+      </p>
+    </section>
+
+    <!-- 모서리 둥글기 -->
+    <section class="demo-section">
+      <h2>🔲 모서리 둥글기 (Border Radius)</h2>
+      <div class="demo-grid demo-grid-3">
+        <div style="height: 100px; background: var(--bg-elevated); border: 1px solid var(--border-primary); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">
+          sm (4px)
+        </div>
+        <div style="height: 100px; background: var(--bg-elevated); border: 1px solid var(--border-primary); border-radius: var(--radius-base); display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">
+          base (6px)
+        </div>
+        <div style="height: 100px; background: var(--bg-elevated); border: 1px solid var(--border-primary); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">
+          lg (12px)
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // 테마 토글 함수
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.classList.contains('theme-light') ? 'light' : 'dark';
+      
+      if (currentTheme === 'dark') {
+        html.classList.remove('theme-dark');
+        html.classList.add('theme-light');
+        localStorage.setItem('theme', 'light');
+      } else {
+        html.classList.remove('theme-light');
+        html.classList.add('theme-dark');
+        localStorage.setItem('theme', 'dark');
+      }
+    }
+
+    // 페이지 로드 시 저장된 테마 적용
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.classList.add(`theme-${savedTheme}`);
+    });
+  </script>
+</body>
+</html>
