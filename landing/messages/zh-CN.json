@@ -1,0 +1,70 @@
+{
+  "common": {
+    "app_name": "ZZIK",
+    "tagline": "基于位置的体验平台"
+  },
+  "nav": {
+    "home": "首页",
+    "features": "功能",
+    "pricing": "价格",
+    "contact": "联系"
+  },
+  "hero": {
+    "title": "将外国游客转化为实际销售",
+    "subtitle": "GPS完整性验证保证准确签到和奖励系统",
+    "cta_primary": "免费开始",
+    "cta_secondary": "查看演示"
+  },
+  "features": {
+    "title": "核心功能",
+    "gps_integrity": {
+      "title": "GPS完整性验证",
+      "description": "5种验证算法防止作弊，保证真实访问"
+    },
+    "multilingual": {
+      "title": "多语言支持",
+      "description": "完美支持韩语、中文、日语，吸引外国游客"
+    },
+    "dashboard": {
+      "title": "实时仪表板",
+      "description": "一目了然地查看访问转化率、体验券使用率和ROI"
+    }
+  },
+  "pricing": {
+    "title": "价格说明",
+    "basic": {
+      "name": "基础版",
+      "price": "500,000韩元",
+      "period": "/月",
+      "features": [
+        "包含20家店铺",
+        "每月5,000次签到",
+        "基础仪表板",
+        "邮件支持"
+      ]
+    },
+    "pro": {
+      "name": "专业版",
+      "price": "1,500,000韩元",
+      "period": "/月",
+      "features": [
+        "包含100家店铺",
+        "无限签到",
+        "高级分析",
+        "24/7支持",
+        "定制报告"
+      ]
+    }
+  },
+  "contact": {
+    "title": "现在就开始",
+    "description": "与ZZIK一起将外国游客变成忠实客户",
+    "cta": "申请免费咨询"
+  },
+  "footer": {
+    "company": "关于公司",
+    "privacy": "隐私政策",
+    "terms": "使用条款",
+    "copyright": "© 2025 ZZIK. 版权所有"
+  }
+}

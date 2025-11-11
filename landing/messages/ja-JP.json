@@ -1,0 +1,70 @@
+{
+  "common": {
+    "app_name": "ZZIK",
+    "tagline": "位置ベースの体験プラットフォーム"
+  },
+  "nav": {
+    "home": "ホーム",
+    "features": "機能",
+    "pricing": "料金",
+    "contact": "お問い合わせ"
+  },
+  "hero": {
+    "title": "外国人観光客を実際の売上に変換",
+    "subtitle": "GPS整合性検証により保証される正確なチェックインと報酬システム",
+    "cta_primary": "無料で始める",
+    "cta_secondary": "デモを見る"
+  },
+  "features": {
+    "title": "主な機能",
+    "gps_integrity": {
+      "title": "GPS整合性検証",
+      "description": "5つの検証アルゴリズムで不正防止、実際の訪問を保証"
+    },
+    "multilingual": {
+      "title": "多言語サポート",
+      "description": "韓国語、中国語、日本語を完璧にサポートし、外国人観光客を誘致"
+    },
+    "dashboard": {
+      "title": "リアルタイムダッシュボード",
+      "description": "訪問コンバージョン率、体験券使用率、ROIを一目で確認"
+    }
+  },
+  "pricing": {
+    "title": "料金案内",
+    "basic": {
+      "name": "ベーシック",
+      "price": "500,000ウォン",
+      "period": "/月",
+      "features": [
+        "店舗20箇所含む",
+        "月5,000回チェックイン",
+        "基本ダッシュボード",
+        "メールサポート"
+      ]
+    },
+    "pro": {
+      "name": "プロ",
+      "price": "1,500,000ウォン",
+      "period": "/月",
+      "features": [
+        "店舗100箇所含む",
+        "無制限チェックイン",
+        "高度な分析",
+        "24/7サポート",
+        "カスタムレポート"
+      ]
+    }
+  },
+  "contact": {
+    "title": "今すぐ始めましょう",
+    "description": "ZZIKと一緒に外国人観光客を常連客に",
+    "cta": "無料相談申し込み"
+  },
+  "footer": {
+    "company": "会社概要",
+    "privacy": "プライバシーポリシー",
+    "terms": "利用規約",
+    "copyright": "© 2025 ZZIK. All rights reserved."
+  }
+}

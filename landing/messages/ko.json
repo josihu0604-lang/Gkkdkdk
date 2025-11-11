@@ -1,0 +1,103 @@
+{
+  "common": {
+    "app_name": "ZZIK",
+    "tagline": "위치 기반 체험 플랫폼"
+  },
+  "nav": {
+    "home": "홈",
+    "features": "기능",
+    "pricing": "요금",
+    "contact": "문의"
+  },
+  "hero": {
+    "title": "외국인 관광객을 실제 매출로 전환하세요",
+    "subtitle": "GPS 무결성 검증으로 보장되는 정확한 체크인과 리워드 시스템",
+    "cta_primary": "무료로 시작하기",
+    "cta_secondary": "데모 보기"
+  },
+  "features": {
+    "title": "핵심 기능",
+    "gps_integrity": {
+      "title": "GPS 무결성 검증",
+      "description": "5가지 검증 알고리즘으로 스푸핑 방지 및 실제 방문 보장"
+    },
+    "multilingual": {
+      "title": "다국어 지원",
+      "description": "한국어, 중국어, 일본어 완벽 지원으로 외국인 관광객 유치"
+    },
+    "dashboard": {
+      "title": "실시간 대시보드",
+      "description": "방문 전환율, 체험권 사용률, ROI를 한눈에 확인"
+    }
+  },
+  "pricing": {
+    "title": "요금 안내",
+    "basic": {
+      "name": "베이직",
+      "price": "500,000원",
+      "period": "/월",
+      "features": [
+        "매장 20개 포함",
+        "월 5,000회 체크인",
+        "기본 대시보드",
+        "이메일 지원"
+      ]
+    },
+    "pro": {
+      "name": "프로",
+      "price": "1,500,000원",
+      "period": "/월",
+      "features": [
+        "매장 100개 포함",
+        "무제한 체크인",
+        "고급 분석",
+        "24/7 지원",
+        "맞춤형 리포트"
+      ]
+    }
+  },
+  "contact": {
+    "title": "지금 바로 시작하세요",
+    "description": "ZZIK과 함께 외국인 관광객을 단골 고객으로 만드세요",
+    "cta": "무료 상담 신청"
+  },
+  "footer": {
+    "company": "회사 소개",
+    "privacy": "개인정보 처리방침",
+    "terms": "이용약관",
+    "copyright": "© 2025 ZZIK. All rights reserved."
+  },
+  "gps": {
+    "status": {
+      "loading": "위치 확인 중...",
+      "success": "위치 확인 완료!",
+      "accuracy": "정확도: ±{accuracy}m",
+      "low_accuracy_title": "정확도가 낮습니다",
+      "permission_denied_title": "위치 권한이 필요합니다",
+      "unsupported_title": "GPS가 지원되지 않습니다",
+      "error_title": "위치 확인 실패"
+    },
+    "errors": {
+      "unsupported": "이 기기는 GPS를 지원하지 않습니다",
+      "low_accuracy": "현재 정확도: ±{accuracy}m. 실외로 이동해주세요.",
+      "permission_denied": "위치 서비스 권한이 필요합니다",
+      "position_unavailable": "위치 정보를 가져올 수 없습니다",
+      "timeout": "위치 확인 시간이 초과되었습니다",
+      "unknown": "알 수 없는 오류가 발생했습니다",
+      "too_far": "매장에서 {distance}m 떨어져 있습니다. 가까이 이동해주세요."
+    },
+    "actions": {
+      "retry": "다시 시도",
+      "open_settings": "설정으로 이동"
+    },
+    "tips": {
+      "improve_accuracy": "정확도 향상 팁: 실외로 이동, Wi-Fi 켜기, 비행기 모드 끄기",
+      "use_mobile": "모바일 기기에서 접속해주세요"
+    },
+    "settings": {
+      "ios_instruction": "설정 > ZZIK > 위치 > 앱을 사용하는 동안",
+      "android_instruction": "설정 > 앱 > ZZIK > 권한 > 위치 > 허용",
+      "desktop_instruction": "브라우저 설정에서 위치 접근을 허용해주세요"
+    }
+  }
+}
