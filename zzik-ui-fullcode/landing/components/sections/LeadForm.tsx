@@ -7,11 +7,33 @@ export default function LeadForm() {
   const t = useTranslations('cta');
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setIsSubmitting(true);
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     console.log('Lead submitted:', email);
+    setIsSubmitting(false);
     setSubmitted(true);
+  };
+
+  const validateEmail = (value: string) => {
+    if (!value) {
+      setError('');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) {
+      setError('Please enter a valid email address');
+    } else {
+      setError('');
+    }
   };
 
   return (
@@ -55,57 +77,76 @@ export default function LeadForm() {
                 gap: "0.5rem",
                 flexDirection: "column"
               }}>
-                <input
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  style={{ 
-                    padding: "0.75rem 1rem",
-                    borderRadius: "6px",
-                    border: "1px solid #E5E5E5",
-                    fontSize: "0.9375rem",
-                    background: "white",
-                    width: "100%",
-                    transition: "border-color 0.15s ease"
-                  }}
-                  onFocus={(e) => e.currentTarget.style.borderColor = "#5E6AD2"}
-                  onBlur={(e) => e.currentTarget.style.borderColor = "#E5E5E5"}
-                />
+                <div>
+                  <input
+                    type="email"
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      validateEmail(e.target.value);
+                    }}
+                    onBlur={(e) => validateEmail(e.target.value)}
+                    required
+                    disabled={isSubmitting}
+                    className={error ? 'error' : ''}
+                    aria-invalid={!!error}
+                    aria-describedby={error ? 'email-error' : undefined}
+                  />
+                  {error && (
+                    <p 
+                      id="email-error"
+                      style={{
+                        color: '#E53935',
+                        fontSize: '0.875rem',
+                        marginTop: '0.5rem',
+                        textAlign: 'left'
+                      }}
+                      role="alert"
+                    >
+                      {error}
+                    </p>
+                  )}
+                </div>
+                
                 <button 
                   type="submit"
-                  style={{ 
-                    background: "#5E6AD2",
-                    color: "white",
-                    padding: "0.75rem 1.5rem",
-                    fontWeight: 500,
-                    border: "none",
-                    borderRadius: "6px",
-                    fontSize: "0.9375rem",
-                    cursor: "pointer",
-                    transition: "background 0.15s ease",
-                    width: "100%"
+                  className="btn btn-primary"
+                  disabled={isSubmitting || !!error}
+                  aria-busy={isSubmitting}
+                  style={{
+                    width: "100%",
+                    position: 'relative'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = "#4E5BBE"}
-                  onMouseLeave={(e) => e.currentTarget.style.background = "#5E6AD2"}
                 >
-                  {t('button')}
+                  {isSubmitting ? (
+                    <>
+                      <span className="spinner" style={{ marginRight: '0.5rem' }} />
+                      Submitting...
+                    </>
+                  ) : (
+                    t('button')
+                  )}
                 </button>
               </div>
             </form>
           ) : (
-            <div style={{ 
-              fontSize: "1rem",
-              fontWeight: 500,
-              padding: "1rem",
-              background: "#E8F5E9",
-              borderRadius: "6px",
-              color: "#2E7D32",
-              maxWidth: "400px",
-              margin: "0 auto"
-            }}>
-              Thank you! We'll be in touch soon.
+            <div 
+              style={{ 
+                fontSize: "1rem",
+                fontWeight: 500,
+                padding: "1rem 1.5rem",
+                background: "#E8F5E9",
+                borderRadius: "6px",
+                color: "#2E7D32",
+                maxWidth: "400px",
+                margin: "0 auto",
+                border: "1px solid #A5D6A7"
+              }}
+              role="status"
+              aria-live="polite"
+            >
+              ✓ Thank you! We'll be in touch soon.
             </div>
           )}
         </div>

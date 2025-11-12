@@ -43,41 +43,14 @@ export default function Hero() {
           flexWrap: "wrap"
         }}>
           <a 
-            className="btn" 
+            className="btn btn-primary" 
             href="#lead"
-            style={{
-              padding: "0.75rem 1.5rem",
-              fontSize: "0.9375rem",
-              fontWeight: 500,
-              borderRadius: "6px",
-              background: "#5E6AD2",
-              color: "white",
-              border: "none",
-              textDecoration: "none",
-              display: "inline-block",
-              transition: "background 0.15s ease"
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.background = "#4E5BBE"}
-            onMouseLeave={(e) => e.currentTarget.style.background = "#5E6AD2"}
           >
             {t('cta')}
           </a>
           <a
+            className="btn-secondary"
             href="#features"
-            style={{
-              padding: "0.75rem 1.5rem",
-              fontSize: "0.9375rem",
-              fontWeight: 500,
-              borderRadius: "6px",
-              background: "white",
-              color: "#0A0A0A",
-              border: "1px solid #E5E5E5",
-              textDecoration: "none",
-              display: "inline-block",
-              transition: "border-color 0.15s ease"
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.borderColor = "#D0D0D0"}
-            onMouseLeave={(e) => e.currentTarget.style.borderColor = "#E5E5E5"}
           >
             {t('watchDemo')}
           </a>

@@ -56,17 +56,12 @@ export default function FeatureGrid() {
           }}
         >
           {features.map((feature) => (
-            <div 
-              key={feature.key} 
-              style={{
-                background: "white",
-                border: "1px solid #E5E5E5",
-                borderRadius: "8px",
-                padding: "2rem 1.5rem",
-                transition: "border-color 0.15s ease"
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.borderColor = "#D0D0D0"}
-              onMouseLeave={(e) => e.currentTarget.style.borderColor = "#E5E5E5"}
+            <article 
+              key={feature.key}
+              className="card"
+              tabIndex={0}
+              role="article"
+              aria-label={feature.title}
             >
               <h3 style={{ 
                 fontWeight: 600,
@@ -83,7 +78,7 @@ export default function FeatureGrid() {
               }}>
                 {feature.description}
               </p>
-            </div>
+            </article>
           ))}
         </div>
       </div>
