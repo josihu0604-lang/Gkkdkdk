@@ -358,11 +358,20 @@ export function getFormFieldA11yProps(
 ): Record<string, string | boolean> {
   const errorId = `${fieldId}-error`;
   
-  return {
+  const props: {
+    id: string;
+    'aria-invalid': boolean;
+    'aria-describedby'?: string;
+  } = {
     id: fieldId,
     'aria-invalid': !!errorMessage,
-    'aria-describedby': errorMessage ? errorId : undefined,
   };
+  
+  if (errorMessage) {
+    props['aria-describedby'] = errorId;
+  }
+  
+  return props;
 }
 
 /**
