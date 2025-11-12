@@ -1,16 +1,11 @@
 /**
- * ZZIK Landing - Design System Integration
+ * ZZIK Landing - Design System
  * 
- * Priority: Import from webapp/src/design-system/
- * Fallback: ZZIK brand colors (Orange/Navy/Green)
- * 
- * Note: Adjust path if running from different location
+ * ZZIK brand colors (Orange/Navy/Green) in OKLCH color space
+ * for perceptually uniform color manipulation
  */
 
-/* Primary: Import from main design system */
-@import url("../../../src/design-system/globals.css");
-
-/* Fallback tokens (if design system not found) */
+/* Design System Tokens */
 :root {
   /* ZZIK Brand Colors - OKLCH */
   --color-primary-500: oklch(65% 0.20 35);      /* Orange #FF6B35 */

@@ -28,9 +28,6 @@ const nextConfig = {
     } : false,
   },
   
-  // SWC minification (faster than Terser)
-  swcMinify: true,
-  
   // React strict mode for better error detection
   reactStrictMode: true,
   
@@ -142,9 +139,6 @@ const nextConfig = {
   
   // Enable production source maps for better debugging (optional)
   productionBrowserSourceMaps: false, // Set to true if needed for debugging
-  
-  // Optimize fonts
-  optimizeFonts: true,
 };
 
 module.exports = withNextIntl(nextConfig);

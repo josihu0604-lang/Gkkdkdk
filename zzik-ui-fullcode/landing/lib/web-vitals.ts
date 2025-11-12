@@ -102,54 +102,66 @@ export function initWebVitals(): void {
 
   // Dynamically import web-vitals library
   import('web-vitals')
-    .then(({ onCLS, onFID, onFCP, onLCP, onTTFB, onINP }) => {
+    .then((webVitals) => {
       // Cumulative Layout Shift
-      onCLS((metric) => {
-        sendToAnalytics({
-          ...metric,
-          rating: getRating('CLS', metric.value),
-        } as WebVitalsMetric);
-      });
+      if (webVitals.onCLS) {
+        webVitals.onCLS((metric) => {
+          sendToAnalytics({
+            ...metric,
+            rating: getRating('CLS', metric.value),
+          } as WebVitalsMetric);
+        });
+      }
 
-      // First Input Delay
-      onFID((metric) => {
-        sendToAnalytics({
-          ...metric,
-          rating: getRating('FID', metric.value),
-        } as WebVitalsMetric);
-      });
+      // First Input Delay (deprecated in web-vitals v3, use INP instead)
+      if (webVitals.onFID) {
+        webVitals.onFID((metric) => {
+          sendToAnalytics({
+            ...metric,
+            rating: getRating('FID', metric.value),
+          } as WebVitalsMetric);
+        });
+      }
 
       // First Contentful Paint
-      onFCP((metric) => {
-        sendToAnalytics({
-          ...metric,
-          rating: getRating('FCP', metric.value),
-        } as WebVitalsMetric);
-      });
+      if (webVitals.onFCP) {
+        webVitals.onFCP((metric) => {
+          sendToAnalytics({
+            ...metric,
+            rating: getRating('FCP', metric.value),
+          } as WebVitalsMetric);
+        });
+      }
 
       // Largest Contentful Paint
-      onLCP((metric) => {
-        sendToAnalytics({
-          ...metric,
-          rating: getRating('LCP', metric.value),
-        } as WebVitalsMetric);
-      });
+      if (webVitals.onLCP) {
+        webVitals.onLCP((metric) => {
+          sendToAnalytics({
+            ...metric,
+            rating: getRating('LCP', metric.value),
+          } as WebVitalsMetric);
+        });
+      }
 
       // Time to First Byte
-      onTTFB((metric) => {
-        sendToAnalytics({
-          ...metric,
-          rating: getRating('TTFB', metric.value),
-        } as WebVitalsMetric);
-      });
+      if (webVitals.onTTFB) {
+        webVitals.onTTFB((metric) => {
+          sendToAnalytics({
+            ...metric,
+            rating: getRating('TTFB', metric.value),
+          } as WebVitalsMetric);
+        });
+      }
 
       // Interaction to Next Paint
-      onINP((metric) => {
-        sendToAnalytics({
-          ...metric,
-          rating: getRating('INP', metric.value),
-        } as WebVitalsMetric);
-      });
+      if (webVitals.onINP) {
+        webVitals.onINP((metric) => {
+          sendToAnalytics({
+            ...metric,
+            rating: getRating('INP', metric.value),
+          } as WebVitalsMetric);
+        });
+      }
 
       console.log('[Web Vitals] Monitoring initialized');
     })

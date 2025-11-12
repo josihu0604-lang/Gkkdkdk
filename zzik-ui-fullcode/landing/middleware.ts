@@ -72,9 +72,9 @@ export default function middleware(request: NextRequest) {
   const cspDirectives = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Next.js requires unsafe-eval in dev
-    "style-src 'self' 'unsafe-inline'", // Tailwind requires unsafe-inline
+    "style-src 'self' 'unsafe-inline' https://rsms.me https://cdn.jsdelivr.net https://fonts.googleapis.com", // Allow external font CDNs
     "img-src 'self' data: https:",
-    "font-src 'self' data:",
+    "font-src 'self' data: https://rsms.me https://cdn.jsdelivr.net https://fonts.gstatic.com", // Allow external font files
     "connect-src 'self' http://localhost:* https:",
     "frame-ancestors 'none'",
   ];
