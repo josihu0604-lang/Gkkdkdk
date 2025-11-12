@@ -7,31 +7,70 @@ export default function Footer() {
   
   return (
     <footer style={{ 
-      background: 'oklch(20% 0.01 240)',
-      color: 'white',
-      padding: '3rem 0',
-      borderTop: '1px solid oklch(30% 0.01 240)'
+      background: 'var(--bg-surface)',
+      borderTop: '1px solid var(--border-default)',
+      padding: 'var(--space-16) 0 var(--space-12)',
+      marginTop: 'var(--space-32)'
     }}>
       <div className="container" style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '1.5rem'
+        gap: 'var(--space-8)'
       }}>
+        {/* Logo */}
         <div style={{ 
-          fontSize: '1.5rem',
-          fontWeight: 600,
-          letterSpacing: '-0.01em'
+          fontSize: 'var(--text-2xl)',
+          fontWeight: 'var(--font-bold)',
+          letterSpacing: 'var(--tracking-tighter)',
+          background: 'linear-gradient(135deg, var(--color-primary-500), var(--color-accent-500))',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text'
         }}>
           ZZIK
         </div>
-        <p style={{ 
-          opacity: 0.6,
-          fontSize: '0.875rem',
+        
+        {/* Links */}
+        <nav style={{
+          display: 'flex',
+          gap: 'var(--space-8)',
+          flexWrap: 'wrap',
+          justifyContent: 'center'
+        }}>
+          {['About', 'Features', 'Privacy', 'Terms', 'Contact'].map((link) => (
+            <a 
+              key={link}
+              href={`#${link.toLowerCase()}`}
+              style={{
+                fontSize: 'var(--text-sm)',
+                fontWeight: 'var(--font-medium)',
+                color: 'var(--text-secondary)',
+                textDecoration: 'none',
+                transition: 'color var(--duration-fast) var(--ease-out)'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
+            >
+              {link}
+            </a>
+          ))}
+        </nav>
+        
+        {/* Copyright */}
+        <div style={{
+          paddingTop: 'var(--space-8)',
+          borderTop: '1px solid var(--border-default)',
+          width: '100%',
           textAlign: 'center'
         }}>
-          {t('copyright')}
-        </p>
+          <p style={{ 
+            fontSize: 'var(--text-sm)',
+            color: 'var(--text-tertiary)'
+          }}>
+            {t('copyright')}
+          </p>
+        </div>
       </div>
     </footer>
   );
