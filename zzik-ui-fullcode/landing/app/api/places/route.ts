@@ -1,106 +1,116 @@
 /**
- * Places API Endpoint
- * 
- * GET /api/places - Get nearby places or list all places
- * GET /api/places?id=place-id - Get single place by ID
- * GET /api/places?category=cafe - Filter by category
- * GET /api/places?bounds={...} - Filter by bounding box
+ * Places API - List and Create
+ * GET /api/places - List places with filters
+ * POST /api/places - Create new place
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { logger, PerformanceTimer } from '@/lib/logger';
-import { Category } from '@prisma/client';
+import { getPlacesNearby } from '@/lib/db-optimizer';
+import { rateLimit, RateLimitPresets, getClientIp } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
+import { z } from 'zod';
 
-// Cache configuration
-interface CacheEntry {
-  data: any;
-  expiresAt: number;
-}
-
-const placeCache = new Map<string, CacheEntry>();
-const CACHE_TTL_MS = 60000; // 1 minute cache
+// Validation schema for place creation
+const createPlaceSchema = z.object({
+  name: z.string().min(1).max(200),
+  category: z.enum(['CAFE', 'RESTAURANT', 'RETAIL', 'ENTERTAINMENT', 'OTHER']),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  addressFull: z.string().min(1),
+  addressCity: z.string().optional(),
+  addressDistrict: z.string().optional(),
+  wifiSsids: z.array(z.string()).optional(),
+  description: z.string().max(1000).optional(),
+  imageUrl: z.string().url().optional(),
+  websiteUrl: z.string().url().optional(),
+  phoneNumber: z.string().optional(),
+  operatingHours: z.record(z.string()).optional(),
+});
 
 /**
- * GET /api/places - Get places with various filters
+ * GET /api/places
+ * List places with optional filters
  */
 export async function GET(request: NextRequest) {
-  const timer = new PerformanceTimer('places-api');
+  const startTime = Date.now();
   
   try {
-    const searchParams = request.nextUrl.searchParams;
+    // Rate limiting
+    const clientIp = getClientIp(request);
+    const rateLimitResult = await rateLimit(
+      `places-list:${clientIp}`,
+      RateLimitPresets.STANDARD.limit,
+      RateLimitPresets.STANDARD.windowMs
+    );
     
-    // Check for single place query by ID
-    const placeId = searchParams.get('id');
-    if (placeId) {
-      return await getSinglePlace(placeId, timer);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        {
+          status: 429,
+          headers: {
+            'RateLimit-Limit': rateLimitResult.limit.toString(),
+            'RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'Retry-After': Math.ceil(
+              (rateLimitResult.reset - Date.now()) / 1000
+            ).toString(),
+          },
+        }
+      );
     }
     
-    // Check for category filter
+    // Parse query parameters
+    const searchParams = request.nextUrl.searchParams;
+    const lat = searchParams.get('lat');
+    const lng = searchParams.get('lng');
+    const radius = searchParams.get('radius');
     const category = searchParams.get('category');
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const offset = parseInt(searchParams.get('offset') || '0');
     
-    // Check for bounds filter
-    const boundsParam = searchParams.get('bounds');
-    
-    // Check cache first
-    const cacheKey = `places:${category || 'all'}:${boundsParam || 'no-bounds'}`;
-    const now = Date.now();
-    const cachedEntry = placeCache.get(cacheKey);
-    
-    let places;
-    let cacheHit = false;
-    
-    if (cachedEntry && now < cachedEntry.expiresAt) {
-      places = cachedEntry.data;
-      cacheHit = true;
-      logger.info('Places cache hit', { cacheKey });
-    } else {
-      // Build where clause
-      const where: any = { isActive: true };
-      
-      // Add category filter
-      if (category) {
-        const categoryUpper = category.toUpperCase();
-        if (Object.values(Category).includes(categoryUpper as Category)) {
-          where.category = categoryUpper;
-        } else {
-          return NextResponse.json(
-            {
-              success: false,
-              error: 'Invalid category',
-              message: `Category must be one of: ${Object.values(Category).join(', ')}`,
-            },
-            { status: 400 }
-          );
+    // If lat/lng provided, use spatial search
+    if (lat && lng) {
+      const places = await getPlacesNearby(
+        prisma,
+        parseFloat(lat),
+        parseFloat(lng),
+        radius ? parseFloat(radius) : 5,
+        {
+          category: category || undefined,
+          limit,
+          offset,
         }
-      }
+      );
       
-      // Add bounds filter
-      if (boundsParam) {
-        try {
-          const bounds = JSON.parse(boundsParam);
-          where.latitude = {
-            gte: bounds.south,
-            lte: bounds.north,
-          };
-          where.longitude = {
-            gte: bounds.west,
-            lte: bounds.east,
-          };
-        } catch (error) {
-          return NextResponse.json(
-            {
-              success: false,
-              error: 'Invalid bounds parameter',
-              message: 'bounds must be valid JSON with north, south, east, west properties',
-            },
-            { status: 400 }
-          );
-        }
-      }
+      const duration = Date.now() - startTime;
+      logger.info('Places retrieved (spatial)', {
+        count: places.length,
+        lat,
+        lng,
+        radius,
+        duration,
+      });
       
-      // Fetch from database
-      places = await prisma.place.findMany({
+      return NextResponse.json({
+        success: true,
+        data: places,
+        pagination: {
+          limit,
+          offset,
+          total: places.length,
+        },
+      });
+    }
+    
+    // Otherwise, use standard query
+    const where: any = { isActive: true };
+    if (category) {
+      where.category = category;
+    }
+    
+    const [places, total] = await Promise.all([
+      prisma.place.findMany({
         where,
         select: {
           id: true,
@@ -110,241 +120,171 @@ export async function GET(request: NextRequest) {
           longitude: true,
           addressFull: true,
           addressCity: true,
-          addressDistrict: true,
-          addressCountry: true,
-          wifiSsids: true,
-          description: true,
           imageUrl: true,
-          websiteUrl: true,
-          phoneNumber: true,
-          operatingHours: true,
-          totalCheckIns: true,
           averageRating: true,
+          totalCheckIns: true,
+          isActive: true,
           isVerified: true,
-          createdAt: true,
         },
-        orderBy: [
-          { isVerified: 'desc' },
-          { averageRating: 'desc' },
-          { totalCheckIns: 'desc' },
-        ],
-        take: 100, // Limit to 100 places
-      });
-      
-      // Format response
-      places = places.map(place => ({
-        id: place.id,
-        name: place.name,
-        category: place.category.toLowerCase(),
-        location: {
-          latitude: Number(place.latitude),
-          longitude: Number(place.longitude),
-        },
-        address: {
-          full: place.addressFull,
-          city: place.addressCity,
-          district: place.addressDistrict,
-          country: place.addressCountry,
-        },
-        wifi: {
-          ssids: place.wifiSsids,
-        },
-        description: place.description,
-        imageUrl: place.imageUrl,
-        websiteUrl: place.websiteUrl,
-        phoneNumber: place.phoneNumber,
-        operatingHours: place.operatingHours,
-        stats: {
-          totalCheckIns: place.totalCheckIns,
-          averageRating: Number(place.averageRating),
-        },
-        isVerified: place.isVerified,
-        createdAt: place.createdAt.toISOString(),
-      }));
-      
-      // Store in cache
-      placeCache.set(cacheKey, {
-        data: places,
-        expiresAt: now + CACHE_TTL_MS,
-      });
-      
-      logger.info('Places fetched from database', { count: places.length, category, bounds: boundsParam });
-    }
+        take: limit,
+        skip: offset,
+        orderBy: { totalCheckIns: 'desc' },
+      }),
+      prisma.place.count({ where }),
+    ]);
     
-    timer.end();
+    const duration = Date.now() - startTime;
+    logger.info('Places retrieved (list)', {
+      count: places.length,
+      total,
+      duration,
+    });
     
-    return NextResponse.json(
-      {
-        success: true,
-        data: {
-          places,
-          count: places.length,
-          timestamp: new Date().toISOString(),
-        },
-      },
-      {
-        headers: {
-          'X-Cache': cacheHit ? 'HIT' : 'MISS',
-          'Cache-Control': 'public, max-age=60, stale-while-revalidate=30',
-        },
-      }
-    );
-  } catch (error) {
-    logger.error('Places API error', error);
-    
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Internal server error',
-        message: 'Failed to fetch places. Please try again.',
-      },
-      { status: 500 }
-    );
-  }
-}
-
-/**
- * Get single place by ID
- */
-async function getSinglePlace(placeId: string, timer: PerformanceTimer) {
-  try {
-    const place = await prisma.place.findUnique({
-      where: { id: placeId, isActive: true },
-      include: {
-        reviews: {
-          where: { isApproved: true, isHidden: false },
-          take: 5,
-          orderBy: { createdAt: 'desc' },
-          select: {
-            id: true,
-            rating: true,
-            title: true,
-            content: true,
-            imageUrls: true,
-            videoUrl: true,
-            helpfulCount: true,
-            createdAt: true,
-            user: {
-              select: {
-                id: true,
-                username: true,
-                displayName: true,
-                avatarUrl: true,
-              },
-            },
-          },
-        },
-        _count: {
-          select: {
-            checkIns: true,
-            reviews: true,
-          },
-        },
+    return NextResponse.json({
+      success: true,
+      data: places,
+      pagination: {
+        limit,
+        offset,
+        total,
+        hasMore: offset + places.length < total,
       },
     });
     
-    if (!place) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Place not found',
-          message: `No place found with ID: ${placeId}`,
-        },
-        { status: 404 }
-      );
-    }
-    
-    // Format response
-    const formattedPlace = {
-      id: place.id,
-      name: place.name,
-      category: place.category.toLowerCase(),
-      location: {
-        latitude: Number(place.latitude),
-        longitude: Number(place.longitude),
-      },
-      address: {
-        full: place.addressFull,
-        city: place.addressCity,
-        district: place.addressDistrict,
-        country: place.addressCountry,
-      },
-      wifi: {
-        ssids: place.wifiSsids,
-      },
-      description: place.description,
-      imageUrl: place.imageUrl,
-      websiteUrl: place.websiteUrl,
-      phoneNumber: place.phoneNumber,
-      operatingHours: place.operatingHours,
-      stats: {
-        totalCheckIns: place.totalCheckIns,
-        averageRating: Number(place.averageRating),
-        totalReviews: place._count.reviews,
-      },
-      isVerified: place.isVerified,
-      reviews: place.reviews.map(review => ({
-        id: review.id,
-        rating: review.rating,
-        title: review.title,
-        content: review.content,
-        imageUrls: review.imageUrls,
-        videoUrl: review.videoUrl,
-        helpfulCount: review.helpfulCount,
-        createdAt: review.createdAt.toISOString(),
-        user: {
-          id: review.user.id,
-          username: review.user.username,
-          displayName: review.user.displayName,
-          avatarUrl: review.user.avatarUrl,
-        },
-      })),
-      createdAt: place.createdAt.toISOString(),
-      updatedAt: place.updatedAt.toISOString(),
-    };
-    
-    timer.end();
-    
-    return NextResponse.json(
-      {
-        success: true,
-        data: {
-          place: formattedPlace,
-        },
-      },
-      {
-        headers: {
-          'Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
-        },
-      }
-    );
   } catch (error) {
-    logger.error('Single place fetch error', error, { placeId });
+    const duration = Date.now() - startTime;
+    logger.error('Failed to get places', error, { duration });
     
     return NextResponse.json(
-      {
-        success: false,
-        error: 'Internal server error',
-        message: 'Failed to fetch place. Please try again.',
-      },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
 
 /**
- * Clean expired cache entries periodically
+ * POST /api/places
+ * Create new place
  */
-function cleanExpiredCache() {
-  const now = Date.now();
-  for (const [key, entry] of placeCache.entries()) {
-    if (now > entry.expiresAt) {
-      placeCache.delete(key);
+export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  
+  try {
+    // Rate limiting - strict for creation
+    const clientIp = getClientIp(request);
+    const rateLimitResult = await rateLimit(
+      `places-create:${clientIp}`,
+      RateLimitPresets.STRICT.limit,
+      RateLimitPresets.STRICT.windowMs
+    );
+    
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        {
+          status: 429,
+          headers: {
+            'RateLimit-Limit': rateLimitResult.limit.toString(),
+            'RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'Retry-After': Math.ceil(
+              (rateLimitResult.reset - Date.now()) / 1000
+            ).toString(),
+          },
+        }
+      );
     }
+    
+    // TODO: Add authentication check
+    // const authUser = await getCurrentUser(request);
+    // if (!authUser) {
+    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // }
+    
+    // Parse and validate request body
+    const body = await request.json();
+    const validationResult = createPlaceSchema.safeParse(body);
+    
+    if (!validationResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: validationResult.error.errors,
+        },
+        { status: 400 }
+      );
+    }
+    
+    const data = validationResult.data;
+    
+    // Check for duplicate place (same name + location)
+    const existingPlace = await prisma.place.findFirst({
+      where: {
+        name: data.name,
+        latitude: { gte: data.latitude - 0.001, lte: data.latitude + 0.001 },
+        longitude: { gte: data.longitude - 0.001, lte: data.longitude + 0.001 },
+      },
+    });
+    
+    if (existingPlace) {
+      return NextResponse.json(
+        { error: 'Place already exists at this location' },
+        { status: 409 }
+      );
+    }
+    
+    // Create place
+    const place = await prisma.place.create({
+      data: {
+        name: data.name,
+        category: data.category as any,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        addressFull: data.addressFull,
+        addressCity: data.addressCity,
+        addressDistrict: data.addressDistrict,
+        wifiSsids: data.wifiSsids || [],
+        description: data.description,
+        imageUrl: data.imageUrl,
+        websiteUrl: data.websiteUrl,
+        phoneNumber: data.phoneNumber,
+        operatingHours: data.operatingHours,
+        isActive: true,
+        isVerified: false, // Requires manual verification
+      },
+      select: {
+        id: true,
+        name: true,
+        category: true,
+        latitude: true,
+        longitude: true,
+        addressFull: true,
+        imageUrl: true,
+        createdAt: true,
+      },
+    });
+    
+    const duration = Date.now() - startTime;
+    logger.info('Place created successfully', {
+      placeId: place.id,
+      name: place.name,
+      duration,
+    });
+    
+    return NextResponse.json(
+      {
+        success: true,
+        data: place,
+      },
+      { status: 201 }
+    );
+    
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    logger.error('Failed to create place', error, { duration });
+    
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
-}
-
-// Clean cache every 5 minutes
-if (typeof setInterval !== 'undefined') {
-  setInterval(cleanExpiredCache, 5 * 60 * 1000);
 }
