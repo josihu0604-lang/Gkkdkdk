@@ -39,8 +39,12 @@ function getRating(
   value: number
 ): 'good' | 'needs-improvement' | 'poor' {
   const threshold = THRESHOLDS[name];
-  if (value <= threshold.good) return 'good';
-  if (value <= threshold.poor) return 'needs-improvement';
+  if (value <= threshold.good) {
+    return 'good';
+  }
+  if (value <= threshold.poor) {
+    return 'needs-improvement';
+  }
   return 'poor';
 }
 

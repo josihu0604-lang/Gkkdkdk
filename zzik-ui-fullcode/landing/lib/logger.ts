@@ -321,14 +321,16 @@ export function logApiRequest(
   duration: number,
   context?: LogContext
 ): void {
-  const level = status >= 500 ? LogLevel.ERROR : status >= 400 ? LogLevel.WARN : LogLevel.INFO;
+  const message = `API ${method} ${path} - ${status}`;
+  const data = { method, path, status, duration };
   
-  logger.log(level, `API ${method} ${path} - ${status}`, {
-    method,
-    path,
-    status,
-    duration,
-  }, context);
+  if (status >= 500) {
+    logger.error(message, data, context);
+  } else if (status >= 400) {
+    logger.warn(message, data, context);
+  } else {
+    logger.info(message, data, context);
+  }
 }
 
 /**

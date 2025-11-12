@@ -347,8 +347,12 @@ export type WhereCondition<T> = Partial<T> & {
 export function buildWhereClause<T>(
   conditions: Array<Partial<T>>
 ): WhereCondition<T> {
-  if (conditions.length === 0) return {};
-  if (conditions.length === 1) return conditions[0] as WhereCondition<T>;
+  if (conditions.length === 0) {
+    return {};
+  }
+  if (conditions.length === 1) {
+    return conditions[0] as WhereCondition<T>;
+  }
   
   return { AND: conditions as WhereCondition<T>[] };
 }
