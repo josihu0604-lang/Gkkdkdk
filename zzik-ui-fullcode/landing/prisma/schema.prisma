@@ -1,0 +1,341 @@
+// Prisma Schema for ZZIK Platform
+// Database: PostgreSQL (Vercel Postgres)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+// ============================================================================
+// User Management
+// ============================================================================
+
+model User {
+  id             String    @id @default(cuid())
+  walletAddress  String    @unique @map("wallet_address")
+  username       String?   @unique
+  email          String?   @unique
+  emailVerified  DateTime? @map("email_verified")
+  
+  // Profile
+  displayName    String?   @map("display_name")
+  bio            String?
+  avatarUrl      String?   @map("avatar_url")
+  
+  // Gamification
+  level          Int       @default(1)
+  totalPoints    Int       @default(0) @map("total_points")
+  currentStreak  Int       @default(0) @map("current_streak")
+  longestStreak  Int       @default(0) @map("longest_streak")
+  
+  // Timestamps
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  lastActiveAt   DateTime? @map("last_active_at")
+  
+  // Relations
+  checkIns       CheckIn[]
+  vouchers       Voucher[]
+  reviews        Review[]
+  sessions       Session[]
+  
+  @@index([walletAddress])
+  @@index([email])
+  @@index([createdAt])
+  @@map("users")
+}
+
+// ============================================================================
+// Authentication & Sessions
+// ============================================================================
+
+model Session {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  token         String   @unique
+  refreshToken  String?  @unique @map("refresh_token")
+  expiresAt     DateTime @map("expires_at")
+  ipAddress     String?  @map("ip_address")
+  userAgent     String?  @map("user_agent")
+  
+  createdAt     DateTime @default(now()) @map("created_at")
+  lastAccessedAt DateTime @default(now()) @map("last_accessed_at")
+  
+  // Relations
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+// ============================================================================
+// Places
+// ============================================================================
+
+model Place {
+  id          String   @id @default(cuid())
+  name        String
+  category    Category @default(OTHER)
+  
+  // Location
+  latitude    Decimal  @db.Decimal(10, 8)
+  longitude   Decimal  @db.Decimal(11, 8)
+  
+  // Address
+  addressFull     String  @map("address_full")
+  addressCity     String? @map("address_city")
+  addressDistrict String? @map("address_district")
+  addressCountry  String  @default("KR") @map("address_country")
+  
+  // Wi-Fi
+  wifiSsids   String[] @map("wifi_ssids")
+  
+  // Metadata
+  description String?
+  imageUrl    String?  @map("image_url")
+  websiteUrl  String?  @map("website_url")
+  phoneNumber String?  @map("phone_number")
+  
+  // Operating hours (JSON)
+  operatingHours Json?  @map("operating_hours")
+  
+  // Statistics
+  totalCheckIns  Int     @default(0) @map("total_check_ins")
+  averageRating  Decimal @default(0) @db.Decimal(3, 2) @map("average_rating")
+  
+  // Status
+  isActive       Boolean @default(true) @map("is_active")
+  isVerified     Boolean @default(false) @map("is_verified")
+  
+  // Timestamps
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  checkIns       CheckIn[]
+  vouchers       Voucher[]
+  reviews        Review[]
+  
+  @@index([latitude, longitude])
+  @@index([category])
+  @@index([isActive])
+  @@index([createdAt])
+  @@map("places")
+}
+
+enum Category {
+  CAFE
+  RESTAURANT
+  RETAIL
+  ENTERTAINMENT
+  OTHER
+}
+
+// ============================================================================
+// Check-ins
+// ============================================================================
+
+model CheckIn {
+  id              String       @id @default(cuid())
+  userId          String       @map("user_id")
+  placeId         String       @map("place_id")
+  
+  // Status
+  status          CheckInStatus @default(PENDING)
+  
+  // GPS Data
+  latitude        Decimal      @db.Decimal(10, 8)
+  longitude       Decimal      @db.Decimal(11, 8)
+  accuracy        Decimal      @db.Decimal(6, 2)
+  
+  // GPS Integrity
+  integrityScore  Int          @map("integrity_score")
+  distanceScore   Int          @map("distance_score")
+  wifiScore       Int          @map("wifi_score")
+  timeScore       Int          @map("time_score")
+  accuracyScore   Int          @map("accuracy_score")
+  speedScore      Int          @map("speed_score")
+  
+  // Wi-Fi Data (JSON)
+  wifiData        Json?        @map("wifi_data")
+  
+  // Distance
+  distanceMeters  Decimal      @db.Decimal(10, 2) @map("distance_meters")
+  
+  // Timestamps
+  createdAt       DateTime     @default(now()) @map("created_at")
+  approvedAt      DateTime?    @map("approved_at")
+  rejectedAt      DateTime?    @map("rejected_at")
+  
+  // Relations
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  place           Place        @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  voucher         Voucher?
+  
+  @@index([userId])
+  @@index([placeId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([integrityScore])
+  @@map("check_ins")
+}
+
+enum CheckInStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ============================================================================
+// Vouchers
+// ============================================================================
+
+model Voucher {
+  id          String        @id @default(cuid())
+  userId      String        @map("user_id")
+  placeId     String        @map("place_id")
+  checkInId   String        @unique @map("check_in_id")
+  
+  // Voucher Details
+  type        VoucherType
+  value       Decimal       @db.Decimal(10, 2)
+  description String
+  
+  // Status
+  status      VoucherStatus @default(ACTIVE)
+  
+  // Blockchain (USDC on Base)
+  txHash      String?       @unique @map("tx_hash")
+  blockNumber Int?          @map("block_number")
+  
+  // Timestamps
+  createdAt   DateTime      @default(now()) @map("created_at")
+  expiresAt   DateTime      @map("expires_at")
+  redeemedAt  DateTime?     @map("redeemed_at")
+  
+  // Relations
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  place       Place         @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  checkIn     CheckIn       @relation(fields: [checkInId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([placeId])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([createdAt])
+  @@map("vouchers")
+}
+
+enum VoucherType {
+  PERCENTAGE
+  FIXED
+  POINTS
+}
+
+enum VoucherStatus {
+  ACTIVE
+  REDEEMED
+  EXPIRED
+  CANCELLED
+}
+
+// ============================================================================
+// Reviews
+// ============================================================================
+
+model Review {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  placeId     String   @map("place_id")
+  
+  // Content
+  rating      Int      @db.SmallInt
+  title       String?
+  content     String?
+  
+  // Media
+  imageUrls   String[] @map("image_urls")
+  videoUrl    String?  @map("video_url")
+  
+  // Moderation
+  isApproved  Boolean  @default(false) @map("is_approved")
+  isHidden    Boolean  @default(false) @map("is_hidden")
+  
+  // Engagement
+  helpfulCount Int     @default(0) @map("helpful_count")
+  
+  // Timestamps
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  place       Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([placeId])
+  @@index([rating])
+  @@index([createdAt])
+  @@map("reviews")
+}
+
+// ============================================================================
+// Analytics & Logging
+// ============================================================================
+
+model WebVital {
+  id          String   @id @default(cuid())
+  
+  // Metric
+  name        String
+  value       Decimal  @db.Decimal(10, 2)
+  rating      String
+  
+  // Context
+  userId      String?  @map("user_id")
+  sessionId   String?  @map("session_id")
+  url         String
+  userAgent   String   @map("user_agent")
+  
+  // Timestamps
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  @@index([name])
+  @@index([rating])
+  @@index([createdAt])
+  @@map("web_vitals")
+}
+
+model ErrorLog {
+  id          String   @id @default(cuid())
+  
+  // Error Details
+  name        String
+  message     String
+  stack       String?  @db.Text
+  
+  // Context
+  userId      String?  @map("user_id")
+  sessionId   String?  @map("session_id")
+  url         String
+  userAgent   String   @map("user_agent")
+  
+  // Environment
+  environment String   @default("production")
+  version     String?
+  
+  // Timestamps
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  @@index([name])
+  @@index([environment])
+  @@index([createdAt])
+  @@map("error_logs")
+}
