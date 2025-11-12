@@ -8,19 +8,19 @@
   "features": {
     "title": "主な機能",
     "explore": {
-      "title": "🗺️ 探索",
+      "title": "探索",
       "description": "地図で周辺のスポットを発見し、訪問して報酬を獲得"
     },
     "content": {
-      "title": "📱 コンテンツ",
+      "title": "コンテンツ",
       "description": "ショート動画で生々しい場所のレビューを共有・視聴"
     },
     "rewards": {
-      "title": "💰 報酬",
+      "title": "報酬",
       "description": "ミッション完了でUSDCステーブルコインを即座に獲得"
     },
     "gamification": {
-      "title": "🎮 ゲーム化",
+      "title": "ゲーム化",
       "description": "レベルアップしてバッジを獲得、チャレンジを達成"
     }
   },

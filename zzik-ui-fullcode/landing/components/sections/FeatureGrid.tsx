@@ -29,26 +29,67 @@ export default function FeatureGrid() {
   ];
 
   return (
-    <div
+    <section
       id="features"
       style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-        gap: "1rem",
-        marginBottom: "2rem",
+        padding: "4rem 0",
       }}
     >
-      <h2 style={{ gridColumn: '1 / -1', fontSize: '2rem', fontWeight: 700, marginBottom: '1rem' }}>
-        {t('title')}
-      </h2>
-      {features.map((feature) => (
-        <div key={feature.key} className="card">
-          <div style={{ fontWeight: 700, marginBottom: "0.5rem", fontSize: "1.1rem" }}>
-            {feature.title}
-          </div>
-          <div className="subtitle">{feature.description}</div>
+      <div className="container" style={{ maxWidth: "1000px" }}>
+        <h2 style={{ 
+          fontSize: 'clamp(1.75rem, 4vw, 2.25rem)',
+          fontWeight: 700,
+          marginBottom: '3rem',
+          textAlign: 'center',
+          color: "oklch(20% 0.01 240)"
+        }}>
+          {t('title')}
+        </h2>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gap: "1.5rem",
+          }}
+        >
+          {features.map((feature) => (
+            <div 
+              key={feature.key} 
+              style={{
+                background: "white",
+                border: "1px solid oklch(92% 0.008 240)",
+                borderRadius: "0.75rem",
+                padding: "1.75rem",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 8px 16px rgba(0, 0, 0, 0.06)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.08)";
+              }}
+            >
+              <h3 style={{ 
+                fontWeight: 600,
+                marginBottom: "0.75rem",
+                fontSize: "1.125rem",
+                color: "oklch(25% 0.01 240)"
+              }}>
+                {feature.title}
+              </h3>
+              <p style={{
+                color: "oklch(50% 0.01 240)",
+                lineHeight: 1.6,
+                fontSize: "0.9375rem"
+              }}>
+                {feature.description}
+              </p>
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
+      </div>
+    </section>
   );
 }

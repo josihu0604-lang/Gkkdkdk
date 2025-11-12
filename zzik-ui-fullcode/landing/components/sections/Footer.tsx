@@ -7,17 +7,32 @@ export default function Footer() {
   
   return (
     <footer style={{ 
-      background: 'oklch(12% 0.004 240)',
+      background: 'oklch(20% 0.01 240)',
       color: 'white',
-      padding: '2rem',
-      textAlign: 'center'
+      padding: '3rem 0',
+      borderTop: '1px solid oklch(30% 0.01 240)'
     }}>
-      <div style={{ marginBottom: '1rem' }}>
-        <span style={{ fontSize: '1.5rem', fontWeight: 700 }}>ZZIK</span>
+      <div className="container" style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '1.5rem'
+      }}>
+        <div style={{ 
+          fontSize: '1.5rem',
+          fontWeight: 600,
+          letterSpacing: '-0.01em'
+        }}>
+          ZZIK
+        </div>
+        <p style={{ 
+          opacity: 0.6,
+          fontSize: '0.875rem',
+          textAlign: 'center'
+        }}>
+          {t('copyright')}
+        </p>
       </div>
-      <p style={{ opacity: 0.7, fontSize: '0.875rem' }}>
-        {t('copyright')}
-      </p>
     </footer>
   );
 }

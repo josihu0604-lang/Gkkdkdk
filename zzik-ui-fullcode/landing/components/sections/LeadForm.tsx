@@ -15,59 +15,90 @@ export default function LeadForm() {
   };
 
   return (
-    <div 
+    <section 
       id="lead" 
       style={{ 
-        background: 'linear-gradient(135deg, oklch(65% 0.20 35), oklch(48% 0.13 245))',
-        padding: '3rem 2rem',
-        borderRadius: '1rem',
-        color: 'white',
-        textAlign: 'center',
-        marginBottom: '2rem'
+        padding: '4rem 0',
       }}
     >
-      <h2 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-        {t('title')}
-      </h2>
-      <p style={{ opacity: 0.9, marginBottom: '2rem' }}>
-        {t('subtitle')}
-      </p>
-      
-      {!submitted ? (
-        <form onSubmit={handleSubmit} style={{ maxWidth: '400px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <input
-              type="email"
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={{ 
-                flex: 1,
-                padding: '0.75rem',
-                borderRadius: '0.375rem',
-                border: 'none',
-                fontSize: '1rem'
-              }}
-            />
-            <button 
-              type="submit"
-              className="btn"
-              style={{ 
-                background: 'white',
-                color: 'oklch(65% 0.20 35)',
-                padding: '0.75rem 1.5rem'
-              }}
-            >
-              {t('button')}
-            </button>
-          </div>
-        </form>
-      ) : (
-        <div style={{ fontSize: '1.25rem', fontWeight: 600 }}>
-          ✅ Thank you! We'll be in touch soon.
+      <div className="container" style={{ maxWidth: '700px' }}>
+        <div style={{
+          background: 'linear-gradient(135deg, oklch(65% 0.20 35) 0%, oklch(48% 0.13 245) 100%)',
+          padding: '3rem 2rem',
+          borderRadius: 'var(--radius-xl)',
+          color: 'white',
+          textAlign: 'center',
+          boxShadow: 'var(--shadow-lg)'
+        }}>
+          <h2 style={{ 
+            fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+            fontWeight: 700,
+            marginBottom: '0.75rem',
+            color: 'white'
+          }}>
+            {t('title')}
+          </h2>
+          <p style={{ 
+            opacity: 0.95,
+            marginBottom: '2rem',
+            fontSize: '1.0625rem',
+            maxWidth: '500px',
+            margin: '0 auto 2rem'
+          }}>
+            {t('subtitle')}
+          </p>
+          
+          {!submitted ? (
+            <form onSubmit={handleSubmit} style={{ maxWidth: '450px', margin: '0 auto' }}>
+              <div style={{ 
+                display: 'flex',
+                gap: '0.75rem',
+                flexWrap: 'wrap'
+              }}>
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  style={{ 
+                    flex: '1 1 250px',
+                    padding: '0.875rem 1rem',
+                    borderRadius: 'var(--radius-base)',
+                    border: 'none',
+                    fontSize: '1rem',
+                    minWidth: '200px'
+                  }}
+                />
+                <button 
+                  type="submit"
+                  className="btn"
+                  style={{ 
+                    background: 'white',
+                    color: 'oklch(65% 0.20 35)',
+                    padding: '0.875rem 2rem',
+                    fontWeight: 600,
+                    flexShrink: 0
+                  }}
+                >
+                  {t('button')}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div style={{ 
+              fontSize: '1.125rem',
+              fontWeight: 600,
+              padding: '1rem',
+              background: 'rgba(255, 255, 255, 0.15)',
+              borderRadius: 'var(--radius-base)',
+              backdropFilter: 'blur(10px)'
+            }}>
+              Thank you! We'll be in touch soon.
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </div>
+    </section>
   );
 }
