@@ -27,6 +27,9 @@ model User {
   bio            String?
   avatarUrl      String?   @map("avatar_url")
   
+  // Role
+  role           UserRole  @default(USER)
+  
   // Gamification
   level          Int       @default(1)
   totalPoints    Int       @default(0) @map("total_points")
@@ -46,8 +49,15 @@ model User {
   
   @@index([walletAddress])
   @@index([email])
+  @@index([role])
   @@index([createdAt])
   @@map("users")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
 }
 
 // ============================================================================
@@ -108,6 +118,7 @@ model Place {
   
   // Statistics
   totalCheckIns  Int     @default(0) @map("total_check_ins")
+  totalReviews   Int     @default(0) @map("total_reviews")
   averageRating  Decimal @default(0) @db.Decimal(3, 2) @map("average_rating")
   
   // Status
@@ -265,11 +276,21 @@ model Review {
   videoUrl    String?  @map("video_url")
   
   // Moderation
-  isApproved  Boolean  @default(false) @map("is_approved")
-  isHidden    Boolean  @default(false) @map("is_hidden")
+  isApproved  Boolean   @default(true) @map("is_approved")
+  isHidden    Boolean   @default(false) @map("is_hidden")
+  moderatedAt DateTime? @map("moderated_at")
+  moderatedBy String?   @map("moderated_by")
+  moderationReason String? @map("moderation_reason")
   
   // Engagement
   helpfulCount Int     @default(0) @map("helpful_count")
+  helpfulVotes ReviewHelpfulVote[]
+  
+  // Visit date
+  visitDate   DateTime @default(now()) @map("visit_date")
+  
+  // Soft delete
+  deletedAt   DateTime? @map("deleted_at")
   
   // Timestamps
   createdAt   DateTime @default(now()) @map("created_at")
@@ -282,8 +303,27 @@ model Review {
   @@index([userId])
   @@index([placeId])
   @@index([rating])
+  @@index([isApproved])
+  @@index([helpfulCount])
   @@index([createdAt])
+  @@index([deletedAt])
   @@map("reviews")
+}
+
+model ReviewHelpfulVote {
+  id        String   @id @default(cuid())
+  reviewId  String   @map("review_id")
+  userId    String   @map("user_id")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  
+  @@unique([reviewId, userId])
+  @@index([reviewId])
+  @@index([userId])
+  @@map("review_helpful_votes")
 }
 
 // ============================================================================
