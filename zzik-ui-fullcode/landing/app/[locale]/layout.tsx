@@ -2,6 +2,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { PerformanceMonitor } from '../components/PerformanceMonitor';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import "../../styles/globals.css";
 
 export function generateStaticParams() {
@@ -22,9 +23,11 @@ export default async function LocaleLayout({
     <html lang={locale}>
       <body>
         <PerformanceMonitor />
-        <NextIntlClientProvider messages={messages}>
-          {children}
-        </NextIntlClientProvider>
+        <ErrorBoundary>
+          <NextIntlClientProvider messages={messages}>
+            {children}
+          </NextIntlClientProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

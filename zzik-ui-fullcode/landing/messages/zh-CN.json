@@ -31,5 +31,83 @@
   },
   "footer": {
     "copyright": "© 2025 ZZIK. 版权所有。"
+  },
+  "errors": {
+    "generic": "发生错误。请重试。",
+    "network": "请检查网络连接。",
+    "notFound": "未找到请求的项目。",
+    "unauthorized": "需要登录。",
+    "forbidden": "没有访问权限。",
+    "rateLimit": "请求过多。请稍后重试。",
+    "validation": {
+      "required": "必填项。",
+      "invalidEmail": "无效的电子邮件地址。",
+      "invalidCoordinates": "无效的GPS坐标。",
+      "tooFar": "距离签到地点太远。"
+    },
+    "checkIn": {
+      "failed": "签到失败。",
+      "lowIntegrity": "GPS准确度不足。请在更好的位置重试。",
+      "alreadyCheckedIn": "您已在此地点签到。",
+      "placeNotFound": "未找到地点。"
+    }
+  },
+  "success": {
+    "checkIn": "签到成功！获得奖励。",
+    "saved": "已保存。",
+    "updated": "已更新。",
+    "deleted": "已删除。"
+  },
+  "actions": {
+    "retry": "重试",
+    "cancel": "取消",
+    "confirm": "确认",
+    "close": "关闭",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "back": "返回",
+    "next": "下一步",
+    "submit": "提交",
+    "loading": "加载中..."
+  },
+  "checkIn": {
+    "title": "签到",
+    "distance": "距离",
+    "accuracy": "准确度",
+    "status": {
+      "approved": "已批准",
+      "rejected": "已拒绝",
+      "pending": "待处理"
+    }
+  },
+  "places": {
+    "nearby": "附近地点",
+    "categories": {
+      "cafe": "咖啡馆",
+      "restaurant": "餐厅",
+      "retail": "零售店",
+      "entertainment": "娱乐",
+      "other": "其他"
+    }
+  },
+  "vouchers": {
+    "title": "优惠券",
+    "types": {
+      "percentage": "折扣率",
+      "fixed": "固定金额",
+      "points": "积分"
+    },
+    "expires": "到期日期",
+    "redeem": "使用"
+  },
+  "a11y": {
+    "skipToMain": "跳转到主要内容",
+    "loading": "加载中",
+    "error": "错误",
+    "success": "成功",
+    "closeDialog": "关闭对话框",
+    "openMenu": "打开菜单",
+    "closeMenu": "关闭菜单"
   }
 }
